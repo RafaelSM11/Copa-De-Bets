@@ -25,6 +25,20 @@
   --cor-bg-padrao: #111111;
 }
 
+/* TEMA CHROMA KEY (OBS) */
+[data-theme="chroma"] {
+  --cor-primaria: #ffd700;
+  --cor-primaria-rgb: 255, 215, 0;
+  --cor-secundaria: #00ff88;
+  --cor-secundaria-rgb: 0, 255, 136;
+  --cor-bg-padrao: #00ff00; /* Fundo Verde */
+}
+
+/* Override do background para Chroma Key */
+[data-theme="chroma"] body {
+  background: #00ff00 !important;
+}
+
 /* ============================
    Estilos Gerais
 ============================ */
@@ -298,6 +312,24 @@ button:disabled {
   flex: 1;
 }
 
+.btn-vs {
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 16px;
+  border-radius: 8px;
+  background: #8b0000;
+  border: 1px solid #ff4d4d;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-vs:hover:not(:disabled) {
+  background: #ff4d4d;
+  box-shadow: 0 0 10px #ff4d4d;
+}
+
 .btn-roleta {
   margin: 0;
   padding: 6px 12px;
@@ -371,6 +403,41 @@ button:disabled {
 
 .btn-perigo { background: #8b0000; color: #fff; border-color: #ff4d4d; }
 .btn-perigo:hover { background: #ff4d4d; color: #000; box-shadow: 0 0 15px rgba(255, 77, 77, 0.6); }
+
+/* ============================
+   TELA CARA A CARA (VS MODAL)
+============================ */
+.tela-vs {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(10,10,10,0.98); z-index: 10000; display: none;
+  justify-content: space-between; align-items: center; overflow: hidden;
+  box-shadow: inset 0 0 150px rgba(var(--cor-primaria-rgb), 0.2);
+}
+.vs-player-left, .vs-player-right {
+  flex: 1; font-size: 6vw; font-weight: 900; color: #fff;
+  text-align: center; text-transform: uppercase; padding: 20px;
+  text-shadow: 0 0 30px var(--cor-primaria), 0 0 10px rgba(255,255,255,0.5);
+  opacity: 0; word-wrap: break-word;
+}
+.vs-center-logo {
+  font-size: 10vw; font-weight: 900; color: #ff0000;
+  text-shadow: 0 0 40px #ff0000, 3px 3px 0px #fff;
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0);
+  z-index: 10001; font-style: italic;
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes zoomIn {
+  from { transform: translate(-50%, -50%) scale(0); }
+  to { transform: translate(-50%, -50%) scale(1); }
+}
 
 /* ============================
    Card Final

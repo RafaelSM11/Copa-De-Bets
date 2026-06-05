@@ -81,6 +81,15 @@ function tocarSom(tipo) {
     gainNode.gain.linearRampToValueAtTime(0, now + 1.2);
     osc.start(now); osc.stop(now + 1.2);
   }
+  else if (tipo === 'vs') {
+    // Efeito de suspense dramático
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(30, now + 1.5);
+    gainNode.gain.setValueAtTime(0.6, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+    osc.start(now); osc.stop(now + 1.5);
+  }
 }
 
 // ============================
@@ -512,12 +521,14 @@ function renderizarConfrontosBracket() {
             }
         }
         
+        // ADICIONADO: Botão VS (⚔️) e Botão Roleta (🎰) no topo
         matchDiv.innerHTML = `
           <div class="bracket-header">
             <select onchange="alterarProvedor(${f}, ${m}, this.value)" ${isConfirmado ? 'disabled' : ''}>
               <option value="PG" ${provSelecionado === "PG" ? "selected" : ""}>PG (R$ 30)</option>
               <option value="Pragmatic" ${provSelecionado === "Pragmatic" ? "selected" : ""}>Pragmatic (R$ 40)</option>
             </select>
+            <button class="btn-vs" onclick="mostrarCaraACara(${f}, ${m})" title="Apresentar Confronto" ${isConfirmado ? 'disabled' : ''}>⚔️</button>
             <button class="btn-roleta" onclick="abrirRoleta(${f}, ${m})" title="Sortear Jogo" ${isConfirmado ? 'disabled' : ''}>🎰</button>
           </div>
           
@@ -965,6 +976,41 @@ function salvarConfig() {
 }
 
 // ============================
+// Sistema Cara a Cara (VS)
+// ============================
+function mostrarCaraACara(fase, matchIndex) {
+  const dupla = confrontos[fase][matchIndex];
+  
+  document.getElementById('vsP1').innerHTML = dupla[0];
+  document.getElementById('vsP2').innerHTML = dupla[1];
+
+  const tela = document.getElementById('telaVs');
+  tela.style.display = 'flex';
+  tocarSom('vs');
+
+  // Reseta animações
+  const left = document.querySelector('.vs-player-left');
+  const right = document.querySelector('.vs-player-right');
+  const center = document.querySelector('.vs-center-logo');
+  
+  left.style.animation = 'none'; 
+  right.style.animation = 'none'; 
+  center.style.animation = 'none';
+  
+  // Força reflow e aplica as classes de entrada
+  setTimeout(() => {
+      left.style.animation = 'slideInLeft 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards';
+      right.style.animation = 'slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards';
+      center.style.animation = 'zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.3s';
+  }, 10);
+
+  // Fecha depois de 3.5 segundos
+  setTimeout(() => {
+      tela.style.display = 'none';
+  }, 3500);
+}
+
+// ============================
 // Sistema de Roleta
 // ============================
 let roletaAtualJogos = [];
@@ -1078,6 +1124,9 @@ function girarRoleta() {
 }
 
 function fecharCardFinal() { document.getElementById('cardFinal').style.display = 'none'; }
+
+// Expõe a nova função de VS para o HTML
+window.mostrarCaraACara = mostrarCaraACara;
 
 // Inicia chamando o Load
 window.onload = () => {

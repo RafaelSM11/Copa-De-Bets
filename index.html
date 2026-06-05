@@ -146,6 +146,7 @@
         <option value="padrao">🎰 Cassino Clássico (Dourado/Verde)</option>
         <option value="neon">⚡ Cyberpunk (Rosa/Ciano Neon)</option>
         <option value="dark">🌑 Minimalista (Dark/Cinza)</option>
+        <option value="chroma">🟩 Fundo Verde (Chroma Key / OBS)</option>
       </select>
 
       <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -242,6 +243,13 @@
       <button id="btnGirarRoleta" onclick="girarRoleta()" style="font-size: 20px; padding: 15px 40px; margin-right: 10px;">🔄 Girar Roleta</button>
       <button onclick="fecharRoleta()" class="btn-perigo" style="padding: 15px 20px;">❌</button>
     </div>
+  </div>
+
+  <!-- Modal VS (Cara a Cara) -->
+  <div id="telaVs" class="tela-vs">
+    <div class="vs-player-left" id="vsP1">Jogador 1</div>
+    <div class="vs-center-logo">VS</div>
+    <div class="vs-player-right" id="vsP2">Jogador 2</div>
   </div>
 
   <script src="script.js"></script>
