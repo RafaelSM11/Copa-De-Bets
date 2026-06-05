@@ -23,7 +23,7 @@ let estatisticasComputadas = false;
 let estatisticasGlobais = JSON.parse(localStorage.getItem('FellCup_Estatisticas')) || {};
 
 // ============================
-// Configurações padrão
+// Configurações padrão e Roletas
 // ============================
 let nomeCopa = "Fell Cup Engiene 2026 by@Bobbyzera";
 let porcCampeao = 55;
@@ -32,6 +32,9 @@ let porcMaiorForrada = 10;
 let porcOrganizador = 20;
 let somAtivo = true;
 let temaAtual = "padrao";
+
+let jogosPG = [];
+let jogosPragmatic = [];
 
 const CUSTO_PG_POR_JOGADOR = 30.00;
 const CUSTO_PRAGMATIC_POR_JOGADOR = 40.00;
@@ -132,7 +135,6 @@ function abrirHallDaFama() {
      return;
   }
 
-  // Ordena por Campeão > Vice > Forrada
   ranking.sort((a, b) => {
     if (b.campeao !== a.campeao) return b.campeao - a.campeao;
     if (b.vice !== a.vice) return b.vice - a.vice;
@@ -168,7 +170,7 @@ function limparEstatisticas() {
   if(confirm("ATENÇÃO: Isso vai apagar todo o histórico de vitórias e forradas de todos os jogadores para sempre. Deseja continuar?")) {
       estatisticasGlobais = {};
       localStorage.removeItem('FellCup_Estatisticas');
-      abrirHallDaFama(); // Recarrega a tabela limpa
+      abrirHallDaFama(); 
   }
 }
 
@@ -180,7 +182,7 @@ function salvarProgresso() {
     participantes, valorEntrada, faseAtual, confrontos, provedoresConfrontos,
     vencedoresConfrontos, confrontosConfirmados, ganhosJogadores, qtdParticipantes, totalFases,
     textareaText: document.getElementById('textareaParticipantes').value,
-    config: { nomeCopa, porcCampeao, porcVice, porcMaiorForrada, porcOrganizador, somAtivo, temaAtual },
+    config: { nomeCopa, porcCampeao, porcVice, porcMaiorForrada, porcOrganizador, somAtivo, temaAtual, jogosPG, jogosPragmatic },
     copaIniciada: document.getElementById('copa').style.display === 'block',
     estatisticasComputadas: estatisticasComputadas
   };
@@ -212,6 +214,8 @@ function carregarProgresso() {
       porcOrganizador = estado.config.porcOrganizador || 20;
       somAtivo = estado.config.somAtivo !== undefined ? estado.config.somAtivo : true;
       temaAtual = estado.config.temaAtual || "padrao";
+      jogosPG = estado.config.jogosPG || [];
+      jogosPragmatic = estado.config.jogosPragmatic || [];
 
       document.getElementById('tituloCopa').textContent = nomeCopa;
       document.title = nomeCopa;
@@ -508,12 +512,14 @@ function renderizarConfrontosBracket() {
             }
         }
         
+        // --- AQUI ESTÁ A IMPLEMENTAÇÃO DO BOTÃO DA ROLETA ---
         matchDiv.innerHTML = `
           <div class="bracket-header">
             <select onchange="alterarProvedor(${f}, ${m}, this.value)" ${isConfirmado ? 'disabled' : ''}>
               <option value="PG" ${provSelecionado === "PG" ? "selected" : ""}>PG (R$ 30)</option>
               <option value="Pragmatic" ${provSelecionado === "Pragmatic" ? "selected" : ""}>Pragmatic (R$ 40)</option>
             </select>
+            <button class="btn-roleta" onclick="abrirRoleta(${f}, ${m})" title="Sortear Jogo" ${isConfirmado ? 'disabled' : ''}>🎰</button>
           </div>
           
           <div class="${p1BoxClass}">
@@ -911,7 +917,7 @@ function trocarSorteado(index) {
 }
 
 // ============================
-// Modais
+// Modais de Configurações
 // ============================
 function abrirConfig() { 
   document.getElementById('inputNomeCopa').value = nomeCopa;
@@ -923,6 +929,9 @@ function abrirConfig() {
   document.getElementById('inputSom').value = somAtivo ? "true" : "false";
   document.getElementById('inputTema').value = temaAtual;
   
+  document.getElementById('inputJogosPG').value = jogosPG.join('\n');
+  document.getElementById('inputJogosPragmatic').value = jogosPragmatic.join('\n');
+
   document.getElementById('modalConfig').style.display = 'flex'; 
 }
 
@@ -944,6 +953,9 @@ function salvarConfig() {
   somAtivo = document.getElementById('inputSom').value === "true";
   temaAtual = document.getElementById('inputTema').value;
   
+  jogosPG = document.getElementById('inputJogosPG').value.split('\n').map(n => n.trim()).filter(n => n !== "");
+  jogosPragmatic = document.getElementById('inputJogosPragmatic').value.split('\n').map(n => n.trim()).filter(n => n !== "");
+
   document.body.setAttribute('data-theme', temaAtual);
 
   calcularValores();
@@ -953,10 +965,124 @@ function salvarConfig() {
   fecharConfig(); 
 }
 
-function abrirUltimasCopas() { document.getElementById('modalUltimasCopas').style.display = 'flex'; }
-function fecharUltimasCopas() { document.getElementById('modalUltimasCopas').style.display = 'none'; }
-function abrirRanking() { document.getElementById('modalRanking').style.display = 'flex'; }
-function fecharRanking() { document.getElementById('modalRanking').style.display = 'none'; }
+// ============================
+// Sistema de Roleta
+// ============================
+let roletaAtualJogos = [];
+let anguloAtual = 0;
+let roletaGirando = false;
+
+function abrirRoleta(f, m) {
+  const chave = `${f}_${m}`;
+  const provSelecionado = provedoresConfrontos[chave] || "PG";
+  
+  roletaAtualJogos = provSelecionado === "PG" ? jogosPG : jogosPragmatic;
+
+  if(roletaAtualJogos.length === 0) {
+    alert(`Você não configurou os jogos da ${provSelecionado}. Vá em Configurações e adicione a lista de jogos!`);
+    return;
+  }
+
+  document.getElementById('tituloRoleta').textContent = `🎰 Roleta ${provSelecionado}`;
+  document.getElementById('resultadoRoleta').innerHTML = "";
+  document.getElementById('btnGirarRoleta').disabled = false;
+  anguloAtual = 0;
+  
+  desenharRoleta();
+  document.getElementById('modalRoleta').style.display = 'flex';
+}
+
+function fecharRoleta() {
+  if (roletaGirando) return; // Impede fechar enquanto gira
+  document.getElementById('modalRoleta').style.display = 'none';
+}
+
+function desenharRoleta() {
+  const canvas = document.getElementById('canvasRoleta');
+  const ctx = canvas.getContext('2d');
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = canvas.width / 2;
+  
+  const sliceAngle = (2 * Math.PI) / roletaAtualJogos.length;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < roletaAtualJogos.length; i++) {
+    const startAngle = anguloAtual + i * sliceAngle;
+    const endAngle = startAngle + sliceAngle;
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.fillStyle = i % 2 === 0 ? '#1a1a1a' : '#333333';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#ffd700';
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(startAngle + sliceAngle / 2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 16px Arial";
+    // Escreve o texto perto da borda
+    ctx.fillText(roletaAtualJogos[i], radius - 20, 5);
+    ctx.restore();
+  }
+}
+
+function girarRoleta() {
+  if (roletaGirando || roletaAtualJogos.length === 0) return;
+  roletaGirando = true;
+  document.getElementById('btnGirarRoleta').disabled = true;
+  document.getElementById('resultadoRoleta').innerHTML = "<span style='color:#aaa;'>Sorteando...</span>";
+  
+  // Gira entre 5 e 10 voltas completas + ângulo aleatório extra
+  const voltasIniciais = Math.floor(Math.random() * 5) + 5; 
+  const anguloExtra = Math.random() * Math.PI * 2;
+  const anguloFinal = anguloAtual + (voltasIniciais * Math.PI * 2) + anguloExtra;
+  
+  let startTime = null;
+  const duration = 4000; // 4 segundos rodando
+
+  function animar(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const progress = timestamp - startTime;
+    const percent = Math.min(progress / duration, 1);
+    
+    // Efeito ease-out (começa rápido e para devagar)
+    const easeOut = 1 - Math.pow(1 - percent, 4);
+    
+    anguloAtual = anguloFinal * easeOut;
+    desenharRoleta();
+    
+    // Efeito sonoro de "tick" enquanto gira
+    if (progress % 150 < 20) tocarSom('flip');
+    
+    if (percent < 1) {
+      requestAnimationFrame(animar);
+    } else {
+      roletaGirando = false;
+      tocarSom('win');
+      
+      // Lógica matemática para saber qual fatia parou no topo (ponteiro em 270 graus / 1.5 PI)
+      const normalizedAngle = anguloAtual % (2 * Math.PI);
+      const sliceAngle = (2 * Math.PI) / roletaAtualJogos.length;
+      let pointerAngle = (1.5 * Math.PI - normalizedAngle);
+      while(pointerAngle < 0) pointerAngle += 2 * Math.PI;
+      
+      const winningIndex = Math.floor(pointerAngle / sliceAngle);
+      const jogoVencedor = roletaAtualJogos[winningIndex];
+      
+      document.getElementById('resultadoRoleta').innerHTML = `🎮 <strong style="font-size:22px; color:#fff;">${jogoVencedor}</strong>`;
+    }
+  }
+  
+  requestAnimationFrame(animar);
+}
+
 function fecharCardFinal() { document.getElementById('cardFinal').style.display = 'none'; }
 
 // Inicia chamando o Load

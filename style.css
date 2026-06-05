@@ -283,13 +283,36 @@ button:disabled {
 }
 
 /* Elementos Internos da Caixa Ativa */
+.bracket-header {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
 .bracket-header select {
   width: 100%;
   padding: 6px;
   font-size: 13px;
-  margin-top: 0;
-  margin-bottom: 10px;
+  margin: 0;
   background: #111;
+  flex: 1;
+}
+
+.btn-roleta {
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  background: #ff8800;
+  border: 1px solid #cc6600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-roleta:hover:not(:disabled) {
+  background: #ffaa00;
+  box-shadow: 0 0 10px #ff8800;
 }
 
 .player-input-box {

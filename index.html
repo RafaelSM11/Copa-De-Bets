@@ -129,7 +129,7 @@
 
   <!-- Modais de Configurações e Backups -->
   <div id="modalConfig" class="modal-config">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 500px;">
       <h2>⚙️ Configurações Gerais</h2>
       
       <label for="inputNomeCopa">Nome da Copa:</label>
@@ -148,18 +148,39 @@
         <option value="dark">🌑 Minimalista (Dark/Cinza)</option>
       </select>
 
-      <label for="inputCampeao" style="margin-top:15px;">Porcentagem Campeão (%):</label>
-      <input type="number" id="inputCampeao" step="1" min="0" max="100">
-      <label for="inputVice">Porcentagem Vice-Campeão (%):</label>
-      <input type="number" id="inputVice" step="1" min="0" max="100">
-      <label for="inputMaiorForrada">Porcentagem Maior Forrada (%):</label>
-      <input type="number" id="inputMaiorForrada" step="1" min="0" max="100">
-      <label for="inputOrganizador">Porcentagem Organizador (%):</label>
-      <input type="number" id="inputOrganizador" step="1" min="0" max="100">
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <div style="flex: 1;">
+          <label for="inputCampeao">🏆 Campeão (%):</label>
+          <input type="number" id="inputCampeao" step="1" min="0" max="100">
+        </div>
+        <div style="flex: 1;">
+          <label for="inputVice">🥈 Vice (%):</label>
+          <input type="number" id="inputVice" step="1" min="0" max="100">
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+          <label for="inputMaiorForrada">🔥 Forrada (%):</label>
+          <input type="number" id="inputMaiorForrada" step="1" min="0" max="100">
+        </div>
+        <div style="flex: 1;">
+          <label for="inputOrganizador">📋 Org. (%):</label>
+          <input type="number" id="inputOrganizador" step="1" min="0" max="100">
+        </div>
+      </div>
+
+      <hr style="border-color:#555; margin: 20px 0;">
+      <h3 style="color:var(--cor-primaria); margin-bottom: 10px;">🎰 Jogos das Roletas</h3>
+      <p style="font-size: 12px; color: #aaa; margin-bottom: 10px;">Insira os nomes dos jogos (1 por linha) para o sorteio no confronto.</p>
       
+      <label for="inputJogosPG">Jogos PG (Pocket Games):</label>
+      <textarea id="inputJogosPG" rows="4" placeholder="Ex: Fortune Tiger&#10;Fortune Rabbit"></textarea>
+      
+      <label for="inputJogosPragmatic">Jogos Pragmatic Play:</label>
+      <textarea id="inputJogosPragmatic" rows="4" placeholder="Ex: Gates of Olympus&#10;Sweet Bonanza"></textarea>
+
       <hr style="border-color:#555; margin: 20px 0;">
       <h3 style="color:var(--cor-primaria); margin-bottom: 10px;">💾 Backup do Sistema (SaaS)</h3>
-      <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Exporta a copa atual E o histórico de vitórias global.</p>
       <div style="display:flex; justify-content:center; gap:10px;">
         <button onclick="exportarBackup()" style="background:#0056b3; border-color:#004494;">⬇️ Exportar JSON</button>
         <button onclick="document.getElementById('inputFileBackup').click()" style="background:#333; border-color:#555;">⬆️ Importar JSON</button>
@@ -200,6 +221,26 @@
          <button class="btn-perigo" onclick="limparEstatisticas()" style="font-size: 13px; padding: 10px 15px;">🗑️ Resetar Histórico</button>
          <button onclick="fecharHallDaFama()" style="margin-top: 0;">❌ Fechar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal da Roleta do Sorteio -->
+  <div id="modalRoleta" class="modal-config">
+    <div class="modal-content" style="max-width: 450px; text-align: center;">
+      <h2 id="tituloRoleta" style="color: var(--cor-primaria);">🎰 Roleta de Jogos</h2>
+      
+      <div style="position: relative; margin: 30px auto; width: 300px; height: 300px;">
+        <canvas id="canvasRoleta" width="300" height="300"></canvas>
+        <!-- Ponteiro da Roleta -->
+        <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 40px solid var(--cor-secundaria); z-index: 10; filter: drop-shadow(0px 4px 2px rgba(0,0,0,0.5));"></div>
+      </div>
+
+      <div style="height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+        <h3 id="resultadoRoleta" style="color: var(--cor-secundaria); margin: 0;"></h3>
+      </div>
+
+      <button id="btnGirarRoleta" onclick="girarRoleta()" style="font-size: 20px; padding: 15px 40px; margin-right: 10px;">🔄 Girar Roleta</button>
+      <button onclick="fecharRoleta()" class="btn-perigo" style="padding: 15px 20px;">❌</button>
     </div>
   </div>
 
