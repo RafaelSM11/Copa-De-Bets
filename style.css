@@ -299,26 +299,85 @@ button:hover {
 }
 
 /* ============================
-   Bloco Sorteio (bolinhas)
+   Novo Bloco de Sorteio (Lista)
 ============================ */
-.bolinha {
-  display: inline-block;
-  background-color: #ffd700;
-  color: #000;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  line-height: 50px;
-  text-align: center;
-  margin: 5px;
-  position: relative;
-  overflow: hidden;
-  font-size: 11px;
-  font-weight: bold;
+.lista-sorteados {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
-@keyframes cair {
-  0% { top: -60px; opacity: 1; }
-  80% { top: 30px; transform: translateX(var(--desloc)); }
-  100% { top: 30px; opacity: 1; transform: translateX(var(--desloc)); }
+.lista-sorteados::-webkit-scrollbar {
+  width: 6px;
+}
+.lista-sorteados::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+.lista-sorteados::-webkit-scrollbar-thumb {
+  background: #ffd700;
+  border-radius: 10px;
+}
+
+.item-sorteado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(40, 40, 40, 0.9);
+  padding: 10px 15px;
+  border-left: 4px solid #ffd700;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.sorteado-confirmado {
+  border-left-color: #00ff88;
+  background: rgba(20, 50, 30, 0.9);
+  opacity: 0.8;
+}
+
+.nome-sorteado {
+  font-weight: bold;
+  font-size: 16px;
+  color: #fff;
+}
+
+.acoes-sorteio {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-acao-sorteio {
+  margin-top: 0;
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ok {
+  background-color: rgba(0, 255, 136, 0.2);
+  border: 1px solid #00ff88;
+  color: #fff;
+}
+
+.btn-ok:hover {
+  background-color: #00ff88;
+  color: #000;
+}
+
+.btn-x {
+  background-color: rgba(255, 70, 70, 0.2);
+  border: 1px solid #ff4646;
+  color: #fff;
+}
+
+.btn-x:hover {
+  background-color: #ff4646;
 }

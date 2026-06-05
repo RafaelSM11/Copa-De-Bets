@@ -14,6 +14,10 @@ let maiorGanho = 0;
 let jogadorMaiorForrada = "";
 let qtdParticipantes = 16;
 
+// Variáveis de Estado do Sorteio
+let nomesSorteadosState = [];
+let nomesReservaState = [];
+
 // ============================
 // Configurações padrão
 // ============================
@@ -39,11 +43,11 @@ function embaralhar(array) {
 }
 
 function atualizarQuantidadeParticipantes() {
-  const select = document.getElementById('qtdParticipantes');
-  qtdParticipantes = parseInt(select.value);
+  const input = document.getElementById('qtdParticipantes');
+  qtdParticipantes = parseInt(input.value) || 16;
   const textarea = document.getElementById('textareaParticipantes');
   textarea.rows = qtdParticipantes;
-  document.getElementById('infoQtd').textContent = `Digite exatamente ${qtdParticipantes} nomes.`;
+  document.getElementById('infoQtd').textContent = `Os ${qtdParticipantes} nomes confirmados aparecerão aqui.`;
   atualizarValoresGerais();
 }
 
@@ -123,7 +127,7 @@ function iniciarCopa() {
   participantes = textarea.value.split('\n').map(n => n.trim()).filter(n => n !== "");
 
   if (participantes.length !== qtdParticipantes) {
-    alert(`Por favor, digite exatamente ${qtdParticipantes} nomes.`);
+    alert(`A Copa exige exatamente ${qtdParticipantes} nomes confirmados na caixa de participantes.`);
     return;
   }
 
@@ -131,24 +135,27 @@ function iniciarCopa() {
   confrontos = [];
   confrontos[1] = []; 
 
+  // Lógica inteligente: Aceita qualquer número de participantes (Mesmo ímpares) e aplica "BYE" automático.
   for (let i = 0; i < listaEmbaralhada.length; i += 2) {
-    confrontos[1].push([listaEmbaralhada[i], listaEmbaralhada[i+1]]);
+    const j1 = listaEmbaralhada[i];
+    const j2 = listaEmbaralhada[i+1] || "BYE (Avança Direto)";
+    confrontos[1].push([j1, j2]);
     provedoresConfrontos[`1_${confrontos[1].length - 1}`] = "PG";
   }
 
   faseAtual = 1;
   document.getElementById('setup').style.display = 'none';
+  document.getElementById('blocoSorteio').style.display = 'none';
   document.getElementById('copa').style.display = 'block';
 
   renderizarConfrontos();
 }
 
 function getNomeFase(totalConfrontos) {
-  if (totalConfrontos === 16) return "Dezesseis-avos de Final";
-  if (totalConfrontos === 8) return "Oitavas de Final";
-  if (totalConfrontos === 4) return "Quartas de Final";
-  if (totalConfrontos === 2) return "Semifinal";
   if (totalConfrontos === 1) return "Grande Final";
+  if (totalConfrontos === 2) return "Semifinal";
+  if (totalConfrontos === 3 || totalConfrontos === 4) return "Quartas de Final";
+  if (totalConfrontos > 4 && totalConfrontos <= 8) return "Oitavas de Final";
   return "Fase de Confrontos";
 }
 
@@ -202,7 +209,6 @@ function renderizarConfrontos() {
       
       <div class="dupla-confronto" style="display:flex; justify-content: space-around; align-items:stretch; gap:20px;">
         
-        <!-- Jogador 1 -->
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; background: rgba(50,50,50,0.2); padding: 10px; border-radius: 8px;">
           <button class="btn-jogador ${vencedorAtual === dupla[0] ? 'vencedor-ativo' : ''}" style="width:100%; max-width:100%; cursor:default;" disabled>
             ${dupla[0]}
@@ -218,7 +224,6 @@ function renderizarConfrontos() {
 
         <div style="display:flex; align-items:center; font-weight:bold; color:#ffd700; font-size:20px;">VS</div>
 
-        <!-- Jogador 2 -->
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; background: rgba(50,50,50,0.2); padding: 10px; border-radius: 8px;">
           <button class="btn-jogador ${vencedorAtual === dupla[1] ? 'vencedor-ativo' : ''}" style="width:100%; max-width:100%; cursor:default;" disabled>
             ${dupla[1]}
@@ -353,7 +358,9 @@ function avancarFase() {
   faseAtual++;
   confrontos[faseAtual] = [];
   for (let i = 0; i < proximosVencedores.length; i += 2) {
-    confrontos[faseAtual].push([proximosVencedores[i], proximosVencedores[i+1]]);
+    const j1 = proximosVencedores[i];
+    const j2 = proximosVencedores[i+1] || "BYE (Avança Direto)";
+    confrontos[faseAtual].push([j1, j2]);
   }
 
   renderizarConfrontos();
@@ -428,7 +435,7 @@ function gerarPDF() {
 }
 
 // ============================
-// Sorteio Animado e Configurações
+// Nova Lógica do Sorteio
 // ============================
 function toggleBlocoSorteio() {
   const bloco = document.getElementById('blocoSorteio');
@@ -441,34 +448,86 @@ function sortearParticipantes() {
     .map(n => n.trim())
     .filter(n => n !== "");
 
-  if (nomes.length === 0) { alert("Digite ao menos 1 nome"); return; }
-  const qtd = parseInt(document.getElementById('qtdSortear').value);
-  if (qtd > nomes.length) { alert("Quantidade a sortear maior que nomes disponíveis"); return; }
+  if (nomes.length === 0) { alert("Digite ao menos 1 nome na caixa de sorteio."); return; }
+  
+  // Agora permite inputs flexíveis numéricos
+  const qtd = parseInt(document.getElementById('qtdSortear').value) || 16;
+  if (qtd > nomes.length) { alert("A quantidade a sortear não pode ser maior que o número de nomes disponíveis."); return; }
 
   const boxQtdGeral = document.getElementById('qtdParticipantes');
   boxQtdGeral.value = qtd;
   atualizarQuantidadeParticipantes();
 
   const embaralhados = embaralhar(nomes.slice());
-  const sorteados = embaralhados.slice(0, qtd);
   
-  const textareaGeral = document.getElementById('textareaParticipantes');
-  textareaGeral.value = sorteados.join('\n');
+  nomesSorteadosState = embaralhados.slice(0, qtd);
+  nomesReservaState = embaralhados.slice(qtd);
   
-  mostrarSorteados(sorteados);
+  renderizarListaSorteio();
 }
 
-function mostrarSorteados(sorteados) {
+function renderizarListaSorteio() {
   const div = document.getElementById('resultadoSorteio');
   div.innerHTML = "";
-  sorteados.forEach((nome, i) => {
-    const bolinha = document.createElement('div');
-    bolinha.classList.add('bolinha');
-    bolinha.textContent = nome.substring(0, 5);
-    bolinha.style.setProperty('--desloc', `${Math.random()*100 - 50}px`);
-    div.appendChild(bolinha);
-    setTimeout(() => { bolinha.style.animation = `cair 1s forwards`; }, i * 200);
+  
+  if (nomesSorteadosState.length === 0) return;
+
+  const tituloLista = document.createElement('h3');
+  tituloLista.textContent = "Participantes Sorteados:";
+  tituloLista.style.color = "#ffd700";
+  tituloLista.style.marginTop = "20px";
+  div.appendChild(tituloLista);
+
+  const lista = document.createElement('div');
+  lista.className = "lista-sorteados";
+  
+  nomesSorteadosState.forEach((nome, i) => {
+    const item = document.createElement('div');
+    item.className = "item-sorteado";
+    item.innerHTML = `
+      <span class="nome-sorteado">${i + 1}. ${nome}</span>
+      <div class="acoes-sorteio">
+        <button class="btn-acao-sorteio btn-ok" onclick="confirmarSorteado('${nome}', this.parentElement.parentElement)" title="Aprovar e adicionar à copa">✅</button>
+        <button class="btn-acao-sorteio btn-x" onclick="trocarSorteado(${i})" title="Remover e puxar o próximo da reserva">❌</button>
+      </div>
+    `;
+    lista.appendChild(item);
   });
+  
+  div.appendChild(lista);
+}
+
+function confirmarSorteado(nome, rowElement) {
+  const textarea = document.getElementById('textareaParticipantes');
+  let atuais = textarea.value.split('\n').map(n => n.trim()).filter(n => n !== "");
+  
+  if (atuais.length >= qtdParticipantes) {
+    alert(`A lista oficial já atingiu o limite de ${qtdParticipantes} participantes!`);
+    return;
+  }
+
+  if (!atuais.includes(nome)) {
+    atuais.push(nome);
+    textarea.value = atuais.join('\n');
+  }
+  
+  rowElement.classList.add('sorteado-confirmado');
+  rowElement.innerHTML = `<span class="nome-sorteado" style="text-decoration: line-through;">${nome}</span> <span style="color:#00ff88; font-weight:bold; font-size:14px;">✅ Confirmado na Copa</span>`;
+}
+
+function trocarSorteado(index) {
+  if (nomesReservaState.length === 0) {
+    alert("Não há mais nomes no banco de reservas para fazer a substituição.");
+    return;
+  }
+  
+  const nomeRemovido = nomesSorteadosState[index];
+  const novoNome = nomesReservaState.shift(); 
+  
+  nomesSorteadosState[index] = novoNome;
+  nomesReservaState.push(nomeRemovido); 
+  
+  renderizarListaSorteio();
 }
 
 function abrirConfig() { 

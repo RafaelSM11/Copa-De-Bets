@@ -4,13 +4,11 @@
   <meta charset="UTF-8" />
   <title>Fell Cup Engiene 2026 by@Bobbyzera</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Biblioteca para gerar o PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
   <div class="container">
 
-    <!-- Botões principais -->
     <div style="display:flex; justify-content: space-between; margin-bottom: 20px;">
       <div>
         <button onclick="abrirConfig()">⚙️ Configurações</button>
@@ -19,25 +17,21 @@
       <button onclick="toggleBlocoSorteio()">🎲 Sortear Participantes</button>
     </div>
 
-    <!-- Bloco Sorteio Participantes -->
-    <div id="blocoSorteio" style="display: none;">
+    <div id="blocoSorteio" style="display: none; background: rgba(20,20,20,0.8); padding: 20px; border-radius: 15px; border: 1px solid #ffd700; margin-bottom: 30px;">
       <h2>Sorteio de Participantes</h2>
-      <label for="textareaSortear">Digite até 40 nomes (1 por linha):</label>
-      <textarea id="textareaSortear" rows="10" cols="30"></textarea>
+      <label for="textareaSortear">Digite todos os nomes disponíveis (1 por linha):</label>
+      <textarea id="textareaSortear" rows="10" cols="30" placeholder="Ex: Jogador 1&#10;Jogador 2..."></textarea>
 
       <label for="qtdSortear">Quantidade a sortear:</label>
-      <select id="qtdSortear">
-        <option value="8">8</option>
-        <option value="16" selected>16</option>
-        <option value="32">32</option>
-      </select>
+      <input type="number" id="qtdSortear" value="16" min="2" max="100">
 
-      <button onclick="sortearParticipantes()">Sortear</button>
+      <div style="text-align: center;">
+        <button onclick="sortearParticipantes()">Realizar Sorteio</button>
+      </div>
 
       <div id="resultadoSorteio"></div>
     </div>
 
-    <!-- Cards fixos no topo -->
     <div class="cards">
       <div class="card">💰 Total da Banca: R$ <span id="totalBanca">0.00</span></div>
       <div class="card">🏆 Campeão: R$ <span id="premioCampao">0.00</span></div>
@@ -46,28 +40,22 @@
       <div class="card">📋 Organizador: R$ <span id="premioOrganizador">0.00</span></div>
     </div>
 
-    <!-- Tela inicial -->
     <div id="setup">
       <h1 id="tituloCopa">Fell Cup Engiene 2026 by@Bobbyzera</h1>
 
       <label for="valorEntrada">Valor de Entrada por Participante (R$):</label>
       <input type="number" id="valorEntrada" step="0.01" value="50.00" onchange="atualizarValoresGerais()" />
 
-      <label for="qtdParticipantes">Quantidade de Participantes:</label>
-      <select id="qtdParticipantes" onchange="atualizarQuantidadeParticipantes()">
-        <option value="8">8</option>
-        <option value="16" selected>16</option>
-        <option value="32">32</option>
-      </select>
+      <label for="qtdParticipantes">Quantidade de Participantes da Copa:</label>
+      <input type="number" id="qtdParticipantes" value="16" min="2" max="100" onchange="atualizarQuantidadeParticipantes()">
 
       <label for="textareaParticipantes">Participantes (1 por linha):</label>
-      <div><small id="infoQtd">Digite exatamente 16 nomes.</small></div>
+      <div><small id="infoQtd">Os 16 nomes confirmados aparecerão aqui.</small></div>
       <textarea id="textareaParticipantes" rows="16" cols="30"></textarea>
 
       <button onclick="iniciarCopa()">Iniciar Copa</button>
     </div>
 
-    <!-- Tela dos confrontos -->
     <div id="copa" style="display: none;">
       <h2 id="faseNome">Fase da Copa</h2>
       <div id="confrontos"></div>
@@ -79,7 +67,6 @@
     </div>
   </div>
 
-  <!-- Card final vencedor -->
   <div id="cardFinal" class="card-final">
     <div class="card-final-content">
       <h1>🏆 Campeão!</h1>
@@ -102,7 +89,6 @@
     </div>
   </div>
 
-  <!-- Estrutura Oculta para Gerar o PDF -->
   <div id="relatorioPDF" class="pdf-container">
     <h1 id="pdfTitulo">Relatório da Copa</h1>
     <p id="pdfData" style="text-align: center; color: #666; font-size: 14px; margin-top: -15px; margin-bottom: 20px;"></p>
@@ -130,7 +116,6 @@
     </div>
   </div>
 
-  <!-- Modais de Configurações, Ranking e Últimas Copas -->
   <div id="modalConfig" class="modal-config">
     <div class="modal-content">
       <h2>Configurações de Premiação</h2>
