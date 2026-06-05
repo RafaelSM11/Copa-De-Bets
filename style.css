@@ -1,9 +1,36 @@
 /* ============================
+   VARIÁVEIS DE TEMAS VISUAIS
+============================ */
+:root {
+  --cor-primaria: #ffd700;
+  --cor-primaria-rgb: 255, 215, 0;
+  --cor-secundaria: #00ff88;
+  --cor-secundaria-rgb: 0, 255, 136;
+  --cor-bg-padrao: #0d0d0d;
+}
+
+[data-theme="neon"] {
+  --cor-primaria: #ff00ff;
+  --cor-primaria-rgb: 255, 0, 255;
+  --cor-secundaria: #00ffff;
+  --cor-secundaria-rgb: 0, 255, 255;
+  --cor-bg-padrao: #050510;
+}
+
+[data-theme="dark"] {
+  --cor-primaria: #ffffff;
+  --cor-primaria-rgb: 255, 255, 255;
+  --cor-secundaria: #888888;
+  --cor-secundaria-rgb: 136, 136, 136;
+  --cor-bg-padrao: #111111;
+}
+
+/* ============================
    Estilos Gerais
 ============================ */
 body {
   font-family: 'Poppins', sans-serif;
-  background: radial-gradient(circle at top, #0d0d0d, #000000);
+  background: radial-gradient(circle at top, var(--cor-bg-padrao), #000000);
   color: #f5f5f5;
   margin: 0;
   padding: 20px;
@@ -16,9 +43,9 @@ body {
 
 h1, h2 {
   text-align: center;
-  color: #ffd700;
+  color: var(--cor-primaria);
   margin-bottom: 20px;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+  text-shadow: 0 0 10px rgba(var(--cor-primaria-rgb), 0.8);
 }
 
 label {
@@ -32,7 +59,7 @@ input, select, textarea {
   font-size: 15px;
   margin-top: 6px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 215, 0, 0.3);
+  border: 1px solid rgba(var(--cor-primaria-rgb), 0.3);
   background: rgba(20, 20, 20, 0.6);
   color: #fff;
   width: 100%;
@@ -47,7 +74,7 @@ button {
   font-size: 16px;
   cursor: pointer;
   background: #111;
-  border: 2px solid #d4af37;
+  border: 2px solid var(--cor-primaria);
   border-radius: 50px;
   color: #f5f5f5;
   font-weight: bold;
@@ -56,9 +83,9 @@ button {
 }
 
 button:hover:not(:disabled) {
-  background: #d4af37;
+  background: var(--cor-primaria);
   color: #111;
-  box-shadow: 0 0 12px rgba(212,175,55,0.6);
+  box-shadow: 0 0 12px rgba(var(--cor-primaria-rgb), 0.6);
 }
 
 button:disabled {
@@ -80,18 +107,56 @@ button:disabled {
 .card {
   background: rgba(30, 30, 30, 0.6);
   padding: 20px;
-  border: 1px solid rgba(255, 215, 0, 0.8);
+  border: 1px solid rgba(var(--cor-primaria-rgb), 0.8);
   border-radius: 15px;
   font-size: 17px;
   text-align: center;
-  box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.2);
+  box-shadow: inset 0 0 12px rgba(var(--cor-primaria-rgb), 0.2);
   backdrop-filter: blur(8px);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+  box-shadow: 0 0 15px rgba(var(--cor-primaria-rgb), 0.7);
+}
+
+/* ============================
+   Badge Historico (Hall da Fama)
+============================ */
+.badge-text {
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--cor-primaria);
+  text-shadow: 0 0 3px rgba(var(--cor-primaria-rgb), 0.8);
+  margin-left: 4px;
+}
+
+.tabela-hall {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.tabela-hall th {
+  padding: 12px 10px;
+  color: var(--cor-primaria);
+  border-bottom: 2px solid var(--cor-primaria);
+}
+
+.tabela-hall td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #444;
+  color: #eee;
+}
+
+.tabela-hall tr:nth-child(even) {
+  background: rgba(255,255,255,0.05);
+}
+
+.tabela-hall tr:hover {
+  background: rgba(var(--cor-primaria-rgb), 0.1);
 }
 
 /* ============================
@@ -109,10 +174,9 @@ button:disabled {
   min-height: 400px;
 }
 
-/* Custom Scrollbar pro Bracket */
 .bracket-wrapper::-webkit-scrollbar { height: 10px; }
 .bracket-wrapper::-webkit-scrollbar-track { background: #111; border-radius: 10px;}
-.bracket-wrapper::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px;}
+.bracket-wrapper::-webkit-scrollbar-thumb { background: var(--cor-primaria); border-radius: 10px;}
 
 .bracket-col {
   display: flex;
@@ -124,7 +188,7 @@ button:disabled {
 
 .bracket-col-title {
   text-align: center;
-  color: #ffd700;
+  color: var(--cor-primaria);
   font-weight: bold;
   text-transform: uppercase;
   margin-bottom: 10px;
@@ -132,7 +196,6 @@ button:disabled {
   letter-spacing: 1px;
 }
 
-/* Caixa Padrão do Confronto */
 .bracket-box {
   background: rgba(30, 30, 30, 0.9);
   border: 2px solid #555;
@@ -142,7 +205,6 @@ button:disabled {
   transition: all 0.3s ease;
 }
 
-/* Linha conector pra direita -> */
 .bracket-col:not(:last-child) .bracket-box::after {
   content: '';
   position: absolute;
@@ -154,16 +216,15 @@ button:disabled {
   z-index: 1;
 }
 
-/* --- Estados das Caixas --- */
 .bracket-box.active {
-  border-color: #ffd700;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+  border-color: var(--cor-primaria);
+  box-shadow: 0 0 15px rgba(var(--cor-primaria-rgb), 0.2);
   padding: 15px;
 }
 
 .bracket-box.confirmado {
-  border-color: #00ff88;
-  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+  border-color: var(--cor-secundaria);
+  box-shadow: 0 0 15px rgba(var(--cor-secundaria-rgb), 0.2);
 }
 
 .bracket-box.locked {
@@ -181,8 +242,8 @@ button:disabled {
 }
 
 .bracket-box.champion-box {
-  border-color: #ffd700;
-  box-shadow: 0 0 25px rgba(255,215,0,0.5);
+  border-color: var(--cor-primaria);
+  box-shadow: 0 0 25px rgba(var(--cor-primaria-rgb), 0.5);
   padding: 20px;
   text-align: center;
 }
@@ -191,9 +252,9 @@ button:disabled {
    EFEITOS DE VITÓRIA E DERROTA
 ============================ */
 .winner-highlight {
-  border-color: #ffd700 !important;
-  background: rgba(255, 215, 0, 0.1) !important;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+  border-color: var(--cor-primaria) !important;
+  background: rgba(var(--cor-primaria-rgb), 0.1) !important;
+  box-shadow: 0 0 15px rgba(var(--cor-primaria-rgb), 0.3);
   transform: scale(1.03);
   z-index: 2;
   position: relative;
@@ -209,19 +270,19 @@ button:disabled {
 }
 
 .player-locked.winner-highlight {
-  color: #ffd700;
+  color: var(--cor-primaria);
   font-weight: bold;
-  border: 1px solid #ffd700;
+  border: 1px solid var(--cor-primaria);
   border-radius: 8px;
 }
 
 .player-name.crown {
-  color: #ffd700;
+  color: var(--cor-primaria);
   font-size: 16px;
-  text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+  text-shadow: 0 0 5px rgba(var(--cor-primaria-rgb), 0.5);
 }
 
-/* --- Elementos Internos da Caixa Ativa --- */
+/* Elementos Internos da Caixa Ativa */
 .bracket-header select {
   width: 100%;
   padding: 6px;
@@ -250,18 +311,8 @@ button:disabled {
   transition: all 0.3s ease;
 }
 
-.player-data {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.player-data input {
-  width: 80px;
-  padding: 4px;
-  font-size: 12px;
-  margin: 0;
-}
+.player-data { display: flex; align-items: center; gap: 5px; }
+.player-data input { width: 80px; padding: 4px; font-size: 12px; margin: 0; }
 
 .liq-span {
   font-size: 11px;
@@ -270,122 +321,56 @@ button:disabled {
   border-radius: 3px;
   white-space: nowrap;
 }
-
-.liq-span.lucro { background: rgba(0,255,136,0.2); color: #00ff88; }
+.liq-span.lucro { background: rgba(var(--cor-secundaria-rgb),0.2); color: var(--cor-secundaria); }
 .liq-span.prejuizo { background: rgba(255,70,70,0.2); color: #ff4646; }
 
 .vs-divider {
-  text-align: center;
-  font-size: 12px;
-  color: #777;
-  margin: 5px 0;
-  font-weight: bold;
+  text-align: center; font-size: 12px; color: #777; margin: 5px 0; font-weight: bold;
 }
 
-.bracket-footer {
-  margin-top: 10px;
-  text-align: center;
-}
-
-.btn-conf { background: #d4af37; color: #000; padding: 6px 12px; font-size: 12px; border: none; }
-.btn-conf:hover { background: #ffd700; }
+.bracket-footer { margin-top: 10px; text-align: center; }
+.btn-conf { background: var(--cor-primaria); color: #000; padding: 6px 12px; font-size: 12px; border: none; }
+.btn-conf:hover { box-shadow: 0 0 10px var(--cor-primaria); }
 .btn-edit { background: #333; color: #fff; padding: 6px 12px; font-size: 12px; border: 1px solid #555; }
-.btn-edit:hover { background: #444; border-color: #ffd700; }
+.btn-edit:hover { background: #444; border-color: var(--cor-primaria); }
 
-/* --- Elementos Internos da Caixa Trancada (Histórico) --- */
+/* Elementos Internos da Caixa Trancada */
 .player-locked {
-  padding: 8px;
-  border-bottom: 1px solid #333;
-  color: #888;
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: all 0.3s ease;
+  padding: 8px; border-bottom: 1px solid #333; color: #888; font-size: 14px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: all 0.3s ease;
 }
 .player-locked:last-child { border-bottom: none; }
 
 /* Botões da Copa */
-.botoes-fase {
-  text-align: center;
-  margin-top: 30px;
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-}
+.botoes-fase { text-align: center; margin-top: 30px; display: flex; justify-content: center; gap: 15px; }
+.btn-destaque { background: var(--cor-secundaria); color: #000; border-color: var(--cor-secundaria); }
+.btn-destaque:hover { background: var(--cor-secundaria); box-shadow: 0 0 15px rgba(var(--cor-secundaria-rgb),0.6); }
 
-.btn-destaque {
-  background: #00ff88;
-  color: #000;
-  border-color: #00cc6a;
-}
-.btn-destaque:hover {
-  background: #00cc6a;
-  box-shadow: 0 0 15px rgba(0,255,136,0.6);
-}
-
-.btn-perigo {
-  background: #8b0000;
-  color: #fff;
-  border-color: #ff4d4d;
-}
-.btn-perigo:hover {
-  background: #ff4d4d;
-  color: #000;
-  box-shadow: 0 0 15px rgba(255, 77, 77, 0.6);
-}
+.btn-perigo { background: #8b0000; color: #fff; border-color: #ff4d4d; }
+.btn-perigo:hover { background: #ff4d4d; color: #000; box-shadow: 0 0 15px rgba(255, 77, 77, 0.6); }
 
 /* ============================
    Card Final
 ============================ */
 .card-final {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.9);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 9999;
 }
-
 .card-final-content {
-  background: rgba(25,25,25,0.8);
-  padding: 40px;
-  width: 80%;
-  text-align: center;
-  border-radius: 20px;
-  box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
-  backdrop-filter: blur(10px);
+  background: rgba(25,25,25,0.8); padding: 40px; width: 80%; text-align: center;
+  border-radius: 20px; box-shadow: 0 0 25px rgba(var(--cor-primaria-rgb), 0.8); backdrop-filter: blur(10px);
 }
-
 .vencedor-final {
-  font-size: 50px;
-  font-weight: bold;
-  color: #00ff88;
-  display: block;
-  margin: 25px 0;
-  text-shadow: 0 0 15px #00ff88, 0 0 40px #00ffcc;
-  animation: brilhar 2s infinite alternate;
+  font-size: 50px; font-weight: bold; color: var(--cor-secundaria); display: block; margin: 25px 0;
+  text-shadow: 0 0 15px var(--cor-secundaria);
 }
-
-@keyframes brilhar {
-  from { text-shadow: 0 0 6px #00ff88; }
-  to { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ffcc; }
-}
-
 .btn-pdf { background: #0056b3; border-color: #004494; }
 .btn-pdf:hover { background: #004494; box-shadow: 0 0 12px rgba(0, 86, 179, 0.6); }
 
 /* ============================
    Estilos do Relatório PDF (Oculto)
 ============================ */
-.pdf-container {
-  display: none;
-  padding: 40px;
-  background: #ffffff;
-  color: #333333;
-  font-family: Arial, sans-serif;
-}
+.pdf-container { display: none; padding: 40px; background: #ffffff; color: #333333; font-family: Arial, sans-serif; }
 .pdf-container h1 { text-align: center; color: #111; text-transform: uppercase; text-shadow: none; }
 .pdf-container hr { border: 1px solid #cccccc; margin-bottom: 20px; }
 .pdf-section { margin-bottom: 30px; }
@@ -394,127 +379,45 @@ button:disabled {
    Modais
 ============================ */
 .modal-config {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.9);
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  overflow-y: auto;
-  padding: 20px;
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.9); justify-content: center; align-items: center; z-index: 9999; overflow-y: auto; padding: 20px;
 }
-
 .modal-content {
-  background: rgba(30,30,30,0.8);
-  padding: 35px;
-  width: 420px;
-  max-width: 90%;
-  border-radius: 15px;
-  box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
-  text-align: center;
-  backdrop-filter: blur(8px);
-  margin: auto;
+  background: rgba(30,30,30,0.8); padding: 35px; width: 420px; max-width: 90%;
+  border-radius: 15px; box-shadow: 0 0 25px rgba(var(--cor-primaria-rgb), 0.7); text-align: center; backdrop-filter: blur(8px); margin: auto;
 }
 
 /* ============================
    EFEITO DE CARTAS VIRANDO (Card Flip)
 ============================ */
-.cards-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
-  margin: 25px 0;
-}
-
-.flip-card {
-  background-color: transparent;
-  width: 100px;
-  height: 140px;
-  perspective: 1000px;
-}
-
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-}
-
-.flip-card.flipped .flip-card-inner {
-  transform: rotateY(180deg);
-}
-
+.cards-container { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin: 25px 0; }
+.flip-card { background-color: transparent; width: 100px; height: 140px; perspective: 1000px; }
+.flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+.flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
 .flip-card-front, .flip-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  box-sizing: border-box;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; padding: 10px; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.5);
 }
-
 .flip-card-front {
-  background: linear-gradient(135deg, #111, #222);
-  border: 2px solid #d4af37;
-  color: #d4af37;
-  font-size: 40px;
+  background: linear-gradient(135deg, #111, #222); border: 2px solid var(--cor-primaria); color: var(--cor-primaria); font-size: 40px;
 }
-
 .flip-card-back {
-  background: linear-gradient(135deg, #00ff88, #00cc6a);
-  color: #000;
-  transform: rotateY(180deg);
-  border: 2px solid #fff;
-  font-weight: bold;
-  font-size: 13px;
-  word-wrap: break-word;
+  background: linear-gradient(135deg, var(--cor-secundaria), #00cc6a); color: #000; transform: rotateY(180deg); border: 2px solid #fff; font-weight: bold; font-size: 13px; word-wrap: break-word;
 }
 
-/* ============================
-   Bloco Sorteio (Lista)
-============================ */
-.lista-sorteados {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 15px;
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 5px;
-}
+/* Bloco Sorteio (Lista) */
+.lista-sorteados { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
 .lista-sorteados::-webkit-scrollbar { width: 6px; }
 .lista-sorteados::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); border-radius: 10px; }
-.lista-sorteados::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; }
+.lista-sorteados::-webkit-scrollbar-thumb { background: var(--cor-primaria); border-radius: 10px; }
 
-.item-sorteado {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(40, 40, 40, 0.9);
-  padding: 10px 15px;
-  border-left: 4px solid #ffd700;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-.sorteado-confirmado {
-  border-left-color: #00ff88;
-  background: rgba(20, 50, 30, 0.9);
-  opacity: 0.8;
-}
+.item-sorteado { display: flex; justify-content: space-between; align-items: center; background: rgba(40, 40, 40, 0.9); padding: 10px 15px; border-left: 4px solid var(--cor-primaria); border-radius: 8px; transition: all 0.3s ease; }
+.sorteado-confirmado { border-left-color: var(--cor-secundaria); background: rgba(20, 50, 30, 0.9); opacity: 0.8; }
 .nome-sorteado { font-weight: bold; font-size: 16px; color: #fff; }
 .acoes-sorteio { display: flex; gap: 8px; }
 
 .btn-acao-sorteio { margin-top: 0; padding: 6px 12px; border-radius: 5px; font-size: 14px; border: none; cursor: pointer; transition: all 0.2s ease; }
-.btn-ok { background-color: rgba(0, 255, 136, 0.2); border: 1px solid #00ff88; color: #fff; }
-.btn-ok:hover { background-color: #00ff88; color: #000; }
+.btn-ok { background-color: rgba(var(--cor-secundaria-rgb), 0.2); border: 1px solid var(--cor-secundaria); color: #fff; }
+.btn-ok:hover { background-color: var(--cor-secundaria); color: #000; }
 .btn-x { background-color: rgba(255, 70, 70, 0.2); border: 1px solid #ff4646; color: #fff; }
 .btn-x:hover { background-color: #ff4646; }

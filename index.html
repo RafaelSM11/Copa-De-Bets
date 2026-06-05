@@ -4,23 +4,22 @@
   <meta charset="UTF-8" />
   <title>Fell Cup Engiene 2026 by@Bobbyzera</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Biblioteca para gerar o PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<body>
+<body data-theme="padrao">
   <div class="container">
 
     <!-- Botões principais -->
     <div style="display:flex; justify-content: space-between; margin-bottom: 20px;">
-      <div>
-        <button onclick="abrirConfig()">⚙️ Configurações</button>
-        <button onclick="abrirUltimasCopas()">📜 Últimas Copas</button>
+      <div style="display: flex; gap: 10px;">
+        <button onclick="abrirConfig()">⚙️ Configurações e Backups</button>
+        <button onclick="abrirHallDaFama()" style="background: #2a2a2a; border-color: var(--cor-primaria);">🏆 Hall da Fama</button>
       </div>
       <button onclick="toggleBlocoSorteio()">🎲 Sortear Participantes</button>
     </div>
 
     <!-- Bloco Sorteio Participantes -->
-    <div id="blocoSorteio" style="display: none; background: rgba(20,20,20,0.8); padding: 20px; border-radius: 15px; border: 1px solid #ffd700; margin-bottom: 30px;">
+    <div id="blocoSorteio" style="display: none; background: rgba(20,20,20,0.8); padding: 20px; border-radius: 15px; border: 1px solid var(--cor-primaria); margin-bottom: 30px;">
       <h2>Sorteio de Participantes</h2>
       <label for="textareaSortear">Digite todos os nomes disponíveis (1 por linha):</label>
       <textarea id="textareaSortear" rows="10" cols="30" placeholder="Ex: Jogador 1&#10;Jogador 2..."></textarea>
@@ -32,9 +31,7 @@
         <button id="btnSorteio" onclick="sortearParticipantes()">🃏 Realizar Sorteio</button>
       </div>
 
-      <!-- Mesa das Cartas de Sorteio (Oculta até começar) -->
       <div id="cardsContainer" class="cards-container" style="display: none;"></div>
-
       <div id="resultadoSorteio"></div>
     </div>
 
@@ -69,17 +66,13 @@
       <h2 id="faseNome" style="margin-bottom: 5px;">Fase Atual</h2>
       <p style="text-align: center; color: #aaa; margin-bottom: 20px;">Role para a direita para ver as próximas chaves</p>
       
-      <!-- Container do Chaveamento -->
       <div id="confrontos" class="bracket-wrapper"></div>
       
-      <!-- Botões de Ação do Torneio -->
       <div class="botoes-fase">
         <button onclick="voltarFase()" id="btnVoltar">⬅ Desfazer Fase</button>
         <button onclick="avancarFase()" id="btnAvancar" class="btn-destaque">Finalizar Fase e Avançar ➡</button>
-        <button onclick="abrirRanking()">📊 Ranking</button>
       </div>
 
-      <!-- Botão de Reinício Total -->
       <div style="text-align: center; margin-top: 15px;">
         <button onclick="reiniciarCopaConfirmar()" class="btn-perigo">🔄 Reiniciar Copa do Zero</button>
       </div>
@@ -93,7 +86,7 @@
       <span id="vencedorFinal" class="vencedor-final"></span>
 
       <div id="infoFinal" style="margin-top:10px; font-size:18px; text-align:center;">
-        <p style="font-size: 26px; color: #ffd700; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);">
+        <p style="font-size: 26px; color: var(--cor-primaria); font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px rgba(var(--cor-primaria-rgb), 0.5);">
           💰 Prêmio: <span id="vencedorPremioCampeao">-</span>
         </p>
         <p>🥈 Vice-Campeão: <span id="vencedorVice">-</span></p>
@@ -114,14 +107,12 @@
     <h1 id="pdfTitulo">Relatório da Copa</h1>
     <p id="pdfData" style="text-align: center; color: #666; font-size: 14px; margin-top: -15px; margin-bottom: 20px;"></p>
     <hr>
-    
     <div class="pdf-section">
       <h2 style="color: #333;">🏆 Resultado Final</h2>
       <p><b>Campeão:</b> <span id="pdfCampeao"></span></p>
       <p><b>Vice-Campeão:</b> <span id="pdfVice"></span></p>
       <p><b>Maior Forrada:</b> <span id="pdfMaiorForrada"></span></p>
     </div>
-
     <div class="pdf-section">
       <h2 style="color: #333;">💰 Resumo Financeiro</h2>
       <p><b>Banca Final:</b> R$ <span id="pdfBanca"></span></p>
@@ -130,20 +121,34 @@
       <p><b>Bônus Maior Forrada:</b> R$ <span id="pdfPremioMaiorForrada"></span></p>
       <p><b>Taxa do Organizador:</b> R$ <span id="pdfPremioOrganizador"></span></p>
     </div>
-
     <div class="pdf-section">
       <h2 style="color: #333;">📋 Participantes</h2>
       <p id="pdfParticipantes" style="line-height: 1.8;"></p>
     </div>
   </div>
 
-  <!-- Modais de Configurações, Ranking e Últimas Copas -->
+  <!-- Modais de Configurações e Backups -->
   <div id="modalConfig" class="modal-config">
     <div class="modal-content">
-      <h2>Configurações de Premiação</h2>
+      <h2>⚙️ Configurações Gerais</h2>
+      
       <label for="inputNomeCopa">Nome da Copa:</label>
       <input type="text" id="inputNomeCopa" placeholder="Ex: Copa de Cassino">
-      <label for="inputCampeao">Porcentagem Campeão (%):</label>
+      
+      <label for="inputSom">Efeitos Sonoros:</label>
+      <select id="inputSom">
+        <option value="true">🔊 Ligado</option>
+        <option value="false">🔇 Desligado</option>
+      </select>
+
+      <label for="inputTema">Tema Visual:</label>
+      <select id="inputTema">
+        <option value="padrao">🎰 Cassino Clássico (Dourado/Verde)</option>
+        <option value="neon">⚡ Cyberpunk (Rosa/Ciano Neon)</option>
+        <option value="dark">🌑 Minimalista (Dark/Cinza)</option>
+      </select>
+
+      <label for="inputCampeao" style="margin-top:15px;">Porcentagem Campeão (%):</label>
       <input type="number" id="inputCampeao" step="1" min="0" max="100">
       <label for="inputVice">Porcentagem Vice-Campeão (%):</label>
       <input type="number" id="inputVice" step="1" min="0" max="100">
@@ -151,28 +156,50 @@
       <input type="number" id="inputMaiorForrada" step="1" min="0" max="100">
       <label for="inputOrganizador">Porcentagem Organizador (%):</label>
       <input type="number" id="inputOrganizador" step="1" min="0" max="100">
-      <label for="inputCorFundo">Cor de Fundo:</label>
-      <input type="color" id="inputCorFundo" value="#000000">
+      
+      <hr style="border-color:#555; margin: 20px 0;">
+      <h3 style="color:var(--cor-primaria); margin-bottom: 10px;">💾 Backup do Sistema (SaaS)</h3>
+      <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Exporta a copa atual E o histórico de vitórias global.</p>
+      <div style="display:flex; justify-content:center; gap:10px;">
+        <button onclick="exportarBackup()" style="background:#0056b3; border-color:#004494;">⬇️ Exportar JSON</button>
+        <button onclick="document.getElementById('inputFileBackup').click()" style="background:#333; border-color:#555;">⬆️ Importar JSON</button>
+        <input type="file" id="inputFileBackup" accept=".json" style="display:none;" onchange="importarBackup(event)">
+      </div>
+
       <div style="margin-top:20px; text-align:center;">
-        <button onclick="salvarConfig()">💾 Salvar</button>
+        <button onclick="salvarConfig()">💾 Salvar Preferências</button>
         <button onclick="fecharConfig()">❌ Fechar</button>
       </div>
     </div>
   </div>
 
-  <div id="modalRanking" class="modal-config">
-    <div class="modal-content">
-      <h2>🏅 Ranking de Participantes</h2>
-      <div id="rankingList" style="text-align:left; max-height:400px; overflow-y:auto;"></div>
-      <button onclick="fecharRanking()" style="margin-top:20px;">Fechar</button>
-    </div>
-  </div>
+  <!-- Modal Hall da Fama -->
+  <div id="modalHallFama" class="modal-config">
+    <div class="modal-content" style="max-width: 600px; width: 95%;">
+      <h2>🏆 Hall da Fama Global</h2>
+      <p style="font-size: 13px; color: #aaa; margin-bottom: 15px;">Ranking de todos os tempos baseado nas suas copas finalizadas.</p>
+      
+      <div style="max-height: 350px; overflow-y: auto;">
+        <table class="tabela-hall">
+          <thead>
+            <tr>
+              <th>Pos</th>
+              <th>Jogador</th>
+              <th>🏆 Campeão</th>
+              <th>🥈 Vice</th>
+              <th>🔥 Forradas</th>
+            </tr>
+          </thead>
+          <tbody id="hallFamaList">
+            <!-- Gerado pelo JS -->
+          </tbody>
+        </table>
+      </div>
 
-  <div id="modalUltimasCopas" class="modal-config">
-    <div class="modal-content">
-      <h2>📜 Últimas Copas</h2>
-      <div id="ultimasCopasList" style="text-align:left; max-height:400px; overflow-y:auto;"></div>
-      <button onclick="fecharUltimasCopas()" style="margin-top:20px;">Fechar</button>
+      <div style="margin-top:25px; display:flex; justify-content:space-between; align-items: center;">
+         <button class="btn-perigo" onclick="limparEstatisticas()" style="font-size: 13px; padding: 10px 15px;">🗑️ Resetar Histórico</button>
+         <button onclick="fecharHallDaFama()" style="margin-top: 0;">❌ Fechar</button>
+      </div>
     </div>
   </div>
 

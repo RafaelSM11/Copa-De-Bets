@@ -5,7 +5,7 @@ let participantes = [];
 let valorEntrada = 50.00;
 let totalBanca = 0;
 let faseAtual = 1; 
-let confrontos = []; // Array 2D: confrontos[fase][index_match] = [Jog1, Jog2]
+let confrontos = []; 
 let provedoresConfrontos = {}; 
 let vencedoresConfrontos = {}; 
 let confrontosConfirmados = {}; 
@@ -19,6 +19,9 @@ let nomesSorteadosState = [];
 let nomesReservaState = [];
 let isSorteando = false; 
 
+let estatisticasComputadas = false;
+let estatisticasGlobais = JSON.parse(localStorage.getItem('FellCup_Estatisticas')) || {};
+
 // ============================
 // Configurações padrão
 // ============================
@@ -27,21 +30,159 @@ let porcCampeao = 55;
 let porcVice = 15;
 let porcMaiorForrada = 10;
 let porcOrganizador = 20;
+let somAtivo = true;
+let temaAtual = "padrao";
 
 const CUSTO_PG_POR_JOGADOR = 30.00;
 const CUSTO_PRAGMATIC_POR_JOGADOR = 40.00;
 
 // ============================
-// Funções de Salvamento de Progresso (Local Storage)
+// Efeitos Sonoros (Sintetizador Web Audio API)
+// ============================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function tocarSom(tipo) {
+  if (!somAtivo) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  
+  const osc = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  osc.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  const now = audioCtx.currentTime;
+  
+  if (tipo === 'flip') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+    gainNode.gain.setValueAtTime(0.2, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    osc.start(now); osc.stop(now + 0.1);
+  } 
+  else if (tipo === 'confirm') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.exponentialRampToValueAtTime(300, now + 0.2);
+    gainNode.gain.setValueAtTime(0.3, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    osc.start(now); osc.stop(now + 0.2);
+  } 
+  else if (tipo === 'win') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.setValueAtTime(554, now + 0.15);
+    osc.frequency.setValueAtTime(659, now + 0.3);
+    osc.frequency.setValueAtTime(880, now + 0.45);
+    gainNode.gain.setValueAtTime(0.2, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 1.2);
+    osc.start(now); osc.stop(now + 1.2);
+  }
+}
+
+// ============================
+// Histórico Global (Hall da Fama)
+// ============================
+function getBadges(nomePuro) {
+  const stats = estatisticasGlobais[nomePuro];
+  if (!stats) return nomePuro; 
+  
+  let badges = "";
+  if (stats.campeao > 0) badges += ` 🏆${stats.campeao}x`;
+  if (stats.vice > 0) badges += ` 🥈${stats.vice}x`;
+  if (stats.forrada > 0) badges += ` 🔥${stats.forrada}x`;
+  
+  if (badges !== "") {
+    return `${nomePuro} <span class="badge-text">${badges}</span>`;
+  }
+  return nomePuro;
+}
+
+function registrarEstatisticasGlobal(campeao, vice, forrada) {
+  if (!estatisticasGlobais[campeao]) estatisticasGlobais[campeao] = {campeao:0, vice:0, forrada:0};
+  if (!estatisticasGlobais[vice]) estatisticasGlobais[vice] = {campeao:0, vice:0, forrada:0};
+  if (forrada && !estatisticasGlobais[forrada]) estatisticasGlobais[forrada] = {campeao:0, vice:0, forrada:0};
+
+  estatisticasGlobais[campeao].campeao++;
+  estatisticasGlobais[vice].vice++;
+  if (forrada) estatisticasGlobais[forrada].forrada++;
+
+  localStorage.setItem('FellCup_Estatisticas', JSON.stringify(estatisticasGlobais));
+}
+
+function removerEstatisticasGlobal(campeao, vice, forrada) {
+  if (estatisticasGlobais[campeao] && estatisticasGlobais[campeao].campeao > 0) estatisticasGlobais[campeao].campeao--;
+  if (estatisticasGlobais[vice] && estatisticasGlobais[vice].vice > 0) estatisticasGlobais[vice].vice--;
+  if (forrada && estatisticasGlobais[forrada] && estatisticasGlobais[forrada].forrada > 0) estatisticasGlobais[forrada].forrada--;
+  
+  localStorage.setItem('FellCup_Estatisticas', JSON.stringify(estatisticasGlobais));
+}
+
+function abrirHallDaFama() {
+  const tbody = document.getElementById('hallFamaList');
+  tbody.innerHTML = "";
+  
+  const ranking = Object.keys(estatisticasGlobais).map(nome => {
+    return { nome: nome, ...estatisticasGlobais[nome] };
+  });
+
+  if(ranking.length === 0) {
+     tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 20px;'>Nenhum histórico registrado ainda. Conclua uma copa primeiro!</td></tr>";
+     document.getElementById('modalHallFama').style.display = 'flex';
+     return;
+  }
+
+  // Ordena por Campeão > Vice > Forrada
+  ranking.sort((a, b) => {
+    if (b.campeao !== a.campeao) return b.campeao - a.campeao;
+    if (b.vice !== a.vice) return b.vice - a.vice;
+    return b.forrada - a.forrada;
+  });
+
+  ranking.forEach((jog, index) => {
+    let pos = index + 1;
+    let corNome = "#fff";
+    if(pos === 1) corNome = "var(--cor-primaria)";
+    if(pos === 2) corNome = "#C0C0C0";
+    if(pos === 3) corNome = "#CD7F32";
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${pos}º</td>
+      <td style="font-weight:bold; color:${corNome}; text-align:left;">${jog.nome}</td>
+      <td>${jog.campeao > 0 ? jog.campeao : '-'}</td>
+      <td>${jog.vice > 0 ? jog.vice : '-'}</td>
+      <td>${jog.forrada > 0 ? jog.forrada : '-'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('modalHallFama').style.display = 'flex';
+}
+
+function fecharHallDaFama() {
+  document.getElementById('modalHallFama').style.display = 'none';
+}
+
+function limparEstatisticas() {
+  if(confirm("ATENÇÃO: Isso vai apagar todo o histórico de vitórias e forradas de todos os jogadores para sempre. Deseja continuar?")) {
+      estatisticasGlobais = {};
+      localStorage.removeItem('FellCup_Estatisticas');
+      abrirHallDaFama(); // Recarrega a tabela limpa
+  }
+}
+
+// ============================
+// Salvamento e Backup SaaS
 // ============================
 function salvarProgresso() {
   const estado = {
     participantes, valorEntrada, faseAtual, confrontos, provedoresConfrontos,
     vencedoresConfrontos, confrontosConfirmados, ganhosJogadores, qtdParticipantes, totalFases,
     textareaText: document.getElementById('textareaParticipantes').value,
-    config: { nomeCopa, porcCampeao, porcVice, porcMaiorForrada, porcOrganizador },
-    corFundo: document.getElementById('inputCorFundo').value,
-    copaIniciada: document.getElementById('copa').style.display === 'block'
+    config: { nomeCopa, porcCampeao, porcVice, porcMaiorForrada, porcOrganizador, somAtivo, temaAtual },
+    copaIniciada: document.getElementById('copa').style.display === 'block',
+    estatisticasComputadas: estatisticasComputadas
   };
   localStorage.setItem('FellCup_EstadoSalvo', JSON.stringify(estado));
 }
@@ -61,6 +202,7 @@ function carregarProgresso() {
     ganhosJogadores = estado.ganhosJogadores || {};
     qtdParticipantes = estado.qtdParticipantes || 16;
     totalFases = estado.totalFases || 1;
+    estatisticasComputadas = estado.estatisticasComputadas || false;
 
     if (estado.config) {
       nomeCopa = estado.config.nomeCopa || nomeCopa;
@@ -68,11 +210,12 @@ function carregarProgresso() {
       porcVice = estado.config.porcVice || 15;
       porcMaiorForrada = estado.config.porcMaiorForrada || 10;
       porcOrganizador = estado.config.porcOrganizador || 20;
+      somAtivo = estado.config.somAtivo !== undefined ? estado.config.somAtivo : true;
+      temaAtual = estado.config.temaAtual || "padrao";
 
       document.getElementById('tituloCopa').textContent = nomeCopa;
       document.title = nomeCopa;
-      document.getElementById('inputCorFundo').value = estado.corFundo || "#000000";
-      document.body.style.background = `radial-gradient(circle at top, ${estado.corFundo || "#000000"}, #000000)`;
+      document.body.setAttribute('data-theme', temaAtual);
     }
 
     document.getElementById('valorEntrada').value = valorEntrada;
@@ -99,15 +242,54 @@ function carregarProgresso() {
   }
 }
 
+function exportarBackup() {
+  salvarProgresso();
+  const dataToExport = {
+    versao: 2,
+    copa: JSON.parse(localStorage.getItem('FellCup_EstadoSalvo')),
+    estatisticas: estatisticasGlobais
+  };
+  
+  const blob = new Blob([JSON.stringify(dataToExport)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Backup_${nomeCopa.replace(/\s+/g, '_')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importarBackup(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const json = JSON.parse(e.target.result);
+      if(json.versao === 2) {
+        localStorage.setItem('FellCup_EstadoSalvo', JSON.stringify(json.copa));
+        localStorage.setItem('FellCup_Estatisticas', JSON.stringify(json.estatisticas || {}));
+      } else if (json.participantes !== undefined) {
+        localStorage.setItem('FellCup_EstadoSalvo', JSON.stringify(json));
+      } else {
+        return alert("Arquivo JSON inválido!");
+      }
+      alert("Backup restaurado com sucesso! Recarregando...");
+      location.reload();
+    } catch(err) { alert("Erro ao ler o arquivo."); }
+  };
+  reader.readAsText(file);
+}
+
 function reiniciarCopaConfirmar() {
-  if(confirm("Tem certeza que deseja apagar a copa atual e criar uma do zero? Todo o progresso não salvo será perdido!")) {
+  if(confirm("Deseja apagar a copa atual e criar uma do zero? (As estatísticas globais NÃO serão perdidas, apenas a copa atual)")) {
     localStorage.removeItem('FellCup_EstadoSalvo');
     location.reload();
   }
 }
 
 // ============================
-// Funções auxiliares
+// Lógica Matemática
 // ============================
 function embaralhar(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -128,9 +310,7 @@ function atualizarQuantidadeParticipantes() {
 
 function atualizarValoresGerais() {
   const inputEntrada = document.getElementById('valorEntrada');
-  if (inputEntrada) {
-    valorEntrada = parseFloat(inputEntrada.value) || 0;
-  }
+  if (inputEntrada) valorEntrada = parseFloat(inputEntrada.value) || 0;
   calcularValores();
   salvarProgresso();
 }
@@ -142,14 +322,10 @@ function calcularValores() {
   for (let chave in ganhosJogadores) {
     const partes = chave.split('_');
     const chaveConfronto = `${partes[0]}_${partes[1]}`;
-    
     const provSelecionado = provedoresConfrontos[chaveConfronto] || "PG";
     const custoEntrada = provSelecionado === "PG" ? CUSTO_PG_POR_JOGADOR : CUSTO_PRAGMATIC_POR_JOGADOR;
-    
     const ganho = ganhosJogadores[chave] || 0;
-    const liquido = ganho - custoEntrada; 
-    
-    somaLiquido += liquido;
+    somaLiquido += (ganho - custoEntrada);
   }
 
   totalBanca = bancaInicial + somaLiquido;
@@ -162,7 +338,6 @@ function calcularValores() {
 function CalcularMaiorForradaReal() {
   maiorGanho = 0;
   jogadorMaiorForrada = "";
-
   for (let chave in ganhosJogadores) {
     const valor = ganhosJogadores[chave] || 0;
     if (valor > maiorGanho) {
@@ -186,18 +361,17 @@ function atualizarValoresPremiacao() {
 
   const campoMaiorForrada = document.getElementById('maiorForrada');
   if (maiorGanho > 0 && jogadorMaiorForrada) {
-    campoMaiorForrada.textContent = `${jogadorMaiorForrada} (R$ ${maiorGanho.toFixed(2)}) Prêmio: R$ ${premioMaiorForrada.toFixed(2)}`;
+    campoMaiorForrada.innerHTML = `${getBadges(jogadorMaiorForrada)} (R$ ${maiorGanho.toFixed(2)})<br>Prêmio: R$ ${premioMaiorForrada.toFixed(2)}`;
   } else {
     campoMaiorForrada.textContent = "-";
   }
 }
 
 // ============================
-// Fluxo do Torneio (Mata-Mata)
+// Fluxo do Torneio (Bracket)
 // ============================
 function iniciarCopa() {
   atualizarValoresGerais();
-
   const textarea = document.getElementById('textareaParticipantes');
   participantes = textarea.value.split('\n').map(n => n.trim()).filter(n => n !== "");
 
@@ -209,6 +383,7 @@ function iniciarCopa() {
   const listaEmbaralhada = embaralhar(participantes.slice());
   confrontos = [];
   confrontos[1] = []; 
+  estatisticasComputadas = false;
 
   for (let i = 0; i < listaEmbaralhada.length; i += 2) {
     const j1 = listaEmbaralhada[i];
@@ -275,17 +450,18 @@ function renderizarConfrontosBracket() {
         
         let p1Class = "player-locked";
         let p2Class = "player-locked";
-        let p1Name = dupla[0];
-        let p2Name = dupla[1];
+        
+        let p1Name = getBadges(dupla[0]);
+        let p2Name = getBadges(dupla[1]);
 
         if (vencedor === dupla[0]) {
             p1Class += " winner-highlight";
             p2Class += " loser-fade";
-            p1Name = `👑 ${dupla[0]}`;
+            p1Name = `👑 ${p1Name}`;
         } else if (vencedor === dupla[1]) {
             p2Class += " winner-highlight";
             p1Class += " loser-fade";
-            p2Name = `👑 ${dupla[1]}`;
+            p2Name = `👑 ${p2Name}`;
         }
 
         matchDiv.innerHTML = `
@@ -311,8 +487,10 @@ function renderizarConfrontosBracket() {
         
         let p1BoxClass = "player-input-box";
         let p2BoxClass = "player-input-box";
-        let p1Name = dupla[0];
-        let p2Name = dupla[1];
+        
+        let p1Name = getBadges(dupla[0]);
+        let p2Name = getBadges(dupla[1]);
+        
         let p1NameClass = "player-name";
         let p2NameClass = "player-name";
 
@@ -320,12 +498,12 @@ function renderizarConfrontosBracket() {
             if (vencedorAtual === dupla[0]) {
                 p1BoxClass += " winner-highlight";
                 p2BoxClass += " loser-fade";
-                p1Name = `👑 ${dupla[0]}`;
+                p1Name = `👑 ${p1Name}`;
                 p1NameClass += " crown";
             } else if (vencedorAtual === dupla[1]) {
                 p2BoxClass += " winner-highlight";
                 p1BoxClass += " loser-fade";
-                p2Name = `👑 ${dupla[1]}`;
+                p2Name = `👑 ${p2Name}`;
                 p2NameClass += " crown";
             }
         }
@@ -386,8 +564,9 @@ function renderizarConfrontosBracket() {
     colDiv.className = 'bracket-col';
     const matchDiv = document.createElement('div');
     matchDiv.className = 'bracket-box champion-box winner-highlight';
-    const campeao = document.getElementById('vencedorFinal').textContent;
-    matchDiv.innerHTML = `<h3>🏆 Campeão</h3><div class="player-locked crown" style="font-size:22px; padding:20px; border:none;">👑 ${campeao}</div>`;
+    
+    const campeaoBruto = document.getElementById('vencedorFinal').textContent;
+    matchDiv.innerHTML = `<h3>🏆 Campeão</h3><div class="player-locked crown" style="font-size:20px; padding:20px; border:none;">👑 ${getBadges(campeaoBruto)}</div>`;
     colDiv.appendChild(matchDiv);
     wrapper.appendChild(colDiv);
   }
@@ -453,6 +632,7 @@ function confirmarMatch(fase, matchIndex) {
   }
 
   confrontosConfirmados[chaveElemento] = true;
+  tocarSom('confirm');
   renderizarConfrontosBracket();
   salvarProgresso();
 }
@@ -479,9 +659,19 @@ function avancarFase() {
 
   if (faseAtual === totalFases) {
     faseAtual++; 
-    finalizarCampeonato(proximosVencedores[0], listaAtuais[0]);
+    
+    const campeaoFinal = proximosVencedores[0];
+    const duplaFinal = listaAtuais[0];
+    const viceFinal = duplaFinal[0] === campeaoFinal ? duplaFinal[1] : duplaFinal[0];
+
+    if (!estatisticasComputadas) {
+      registrarEstatisticasGlobal(campeaoFinal, viceFinal, jogadorMaiorForrada);
+      estatisticasComputadas = true;
+      salvarProgresso();
+    }
+
+    finalizarCampeonato(campeaoFinal, duplaFinal);
     renderizarConfrontosBracket();
-    salvarProgresso();
     return;
   }
 
@@ -500,6 +690,15 @@ function avancarFase() {
 
 function voltarFase() {
   if (faseAtual > 1) {
+    if (faseAtual > totalFases && estatisticasComputadas) {
+        const campeaoFinal = vencedoresConfrontos[`${totalFases}_0`];
+        const duplaFinal = confrontos[totalFases][0];
+        const viceFinal = duplaFinal[0] === campeaoFinal ? duplaFinal[1] : duplaFinal[0];
+        
+        removerEstatisticasGlobal(campeaoFinal, viceFinal, jogadorMaiorForrada);
+        estatisticasComputadas = false;
+    }
+
     faseAtual--;
     renderizarConfrontosBracket();
     salvarProgresso();
@@ -516,15 +715,18 @@ function finalizarCampeonato(campeao, duplaFinal) {
 
   document.getElementById('vencedorFinal').textContent = campeao;
   document.getElementById('vencedorPremioCampeao').textContent = `R$ ${premioCampeao.toFixed(2)}`;
-  document.getElementById('vencedorVice').textContent = `${vice} (R$ ${premioVice.toFixed(2)})`;
+  
+  document.getElementById('vencedorVice').innerHTML = `${getBadges(vice)} (R$ ${premioVice.toFixed(2)})`;
   
   if (maiorGanho > 0 && jogadorMaiorForrada) {
-    document.getElementById('vencedorMaiorForrada').textContent = `${jogadorMaiorForrada} (R$ ${maiorGanho.toFixed(2)}) Prêmio: R$ ${premioMaiorForrada.toFixed(2)}`;
+    document.getElementById('vencedorMaiorForrada').innerHTML = `${getBadges(jogadorMaiorForrada)} (R$ ${maiorGanho.toFixed(2)})<br>Prêmio: R$ ${premioMaiorForrada.toFixed(2)}`;
   } else {
     document.getElementById('vencedorMaiorForrada').textContent = "-";
   }
 
   document.getElementById('vencedorOrganizador').textContent = `R$ ${premioOrganizador.toFixed(2)}`;
+  
+  tocarSom('win');
   document.getElementById('cardFinal').style.display = 'flex';
 }
 
@@ -536,8 +738,11 @@ function gerarPDF() {
   document.getElementById('pdfData').textContent = `Gerado em: ${dataFormatada}`;
   
   document.getElementById('pdfCampeao').textContent = document.getElementById('vencedorFinal').textContent;
-  document.getElementById('pdfVice').textContent = document.getElementById('vencedorVice').textContent.split(' (')[0]; 
-  document.getElementById('pdfMaiorForrada').textContent = document.getElementById('vencedorMaiorForrada').textContent;
+  
+  const viceHTML = document.getElementById('vencedorVice').textContent; 
+  document.getElementById('pdfVice').textContent = viceHTML.split(' (')[0]; 
+  
+  document.getElementById('pdfMaiorForrada').textContent = document.getElementById('vencedorMaiorForrada').textContent.split(' (')[0];
   
   document.getElementById('pdfBanca').textContent = totalBanca.toFixed(2);
   document.getElementById('pdfPremioCampeao').textContent = (totalBanca * (porcCampeao / 100)).toFixed(2);
@@ -564,7 +769,7 @@ function gerarPDF() {
 }
 
 // ============================
-// Lógica do Sorteio (Efeito Cartas Virando - Card Flip)
+// Lógica do Sorteio (Efeito Cartas Virando)
 // ============================
 function toggleBlocoSorteio() {
   const bloco = document.getElementById('blocoSorteio');
@@ -572,7 +777,7 @@ function toggleBlocoSorteio() {
 }
 
 function sortearParticipantes() {
-  if (isSorteando) return; // Bloqueia clicks duplos
+  if (isSorteando) return; 
 
   const nomes = document.getElementById('textareaSortear').value
     .split('\n')
@@ -588,14 +793,12 @@ function sortearParticipantes() {
   document.getElementById('btnSorteio').disabled = true;
 
   const embaralhados = embaralhar(nomes.slice());
-  
   const sorteadosFinais = embaralhados.slice(0, qtd);
   nomesReservaState = embaralhados.slice(qtd);
   nomesSorteadosState = []; 
   
   document.getElementById('resultadoSorteio').innerHTML = "";
   
-  // Prepara as cartas na mesa
   const cardsContainer = document.getElementById('cardsContainer');
   cardsContainer.style.display = 'flex';
   cardsContainer.innerHTML = "";
@@ -613,10 +816,7 @@ function sortearParticipantes() {
     cardsContainer.appendChild(card);
   });
 
-  // Dá um tempinho pra galera ver as cartas na mesa e começa o show
-  setTimeout(() => {
-    animarCartasSorteio(sorteadosFinais, 0);
-  }, 800);
+  setTimeout(() => { animarCartasSorteio(sorteadosFinais, 0); }, 800);
 }
 
 function animarCartasSorteio(sorteadosFinais, indexAtual) {
@@ -629,18 +829,13 @@ function animarCartasSorteio(sorteadosFinais, indexAtual) {
   const card = document.getElementById(`carta-${indexAtual}`);
   const alvoNome = sorteadosFinais[indexAtual];
   
-  // Dá o comando CSS para virar a carta 3D
+  tocarSom('flip');
   card.classList.add('flipped');
 
-  // Espera a carta terminar de virar (0.6s) pra jogar o nome na lista
   setTimeout(() => {
       nomesSorteadosState.push(alvoNome);
       renderizarListaSorteio();
-      
-      // Espera mais um pouquinho de suspense e vira a próxima carta
-      setTimeout(() => {
-        animarCartasSorteio(sorteadosFinais, indexAtual + 1);
-      }, 700); 
+      setTimeout(() => { animarCartasSorteio(sorteadosFinais, indexAtual + 1); }, 700); 
   }, 600); 
 }
 
@@ -652,7 +847,7 @@ function renderizarListaSorteio() {
 
   const tituloLista = document.createElement('h3');
   tituloLista.textContent = "Participantes Sorteados:";
-  tituloLista.style.color = "#ffd700";
+  tituloLista.style.color = "var(--cor-primaria)";
   tituloLista.style.marginTop = "20px";
   div.appendChild(tituloLista);
 
@@ -668,10 +863,10 @@ function renderizarListaSorteio() {
     
     if (atuais.includes(nome)) {
       item.classList.add('sorteado-confirmado');
-      item.innerHTML = `<span class="nome-sorteado" style="text-decoration: line-through;">${i + 1}. ${nome}</span> <span style="color:#00ff88; font-weight:bold; font-size:14px;">✅ Confirmado na Copa</span>`;
+      item.innerHTML = `<span class="nome-sorteado" style="text-decoration: line-through;">${i + 1}. ${getBadges(nome)}</span> <span style="color:var(--cor-secundaria); font-weight:bold; font-size:14px;">✅ Confirmado</span>`;
     } else {
       item.innerHTML = `
-        <span class="nome-sorteado">${i + 1}. ${nome}</span>
+        <span class="nome-sorteado">${i + 1}. ${getBadges(nome)}</span>
         <div class="acoes-sorteio">
           <button class="btn-acao-sorteio btn-ok" onclick="confirmarSorteado('${nome}')" title="Aprovar e adicionar à copa">✅</button>
           <button class="btn-acao-sorteio btn-x" onclick="trocarSorteado(${i})" title="Remover e puxar o próximo da reserva">❌</button>
@@ -698,7 +893,6 @@ function confirmarSorteado(nome) {
     textarea.value = atuais.join('\n');
     salvarProgresso();
   }
-  
   renderizarListaSorteio();
 }
 
@@ -713,17 +907,22 @@ function trocarSorteado(index) {
   
   nomesSorteadosState[index] = novoNome;
   nomesReservaState.push(nomeRemovido); 
-  
   renderizarListaSorteio();
 }
 
-// Configurações
+// ============================
+// Modais
+// ============================
 function abrirConfig() { 
   document.getElementById('inputNomeCopa').value = nomeCopa;
   document.getElementById('inputCampeao').value = porcCampeao;
   document.getElementById('inputVice').value = porcVice;
   document.getElementById('inputMaiorForrada').value = porcMaiorForrada;
   document.getElementById('inputOrganizador').value = porcOrganizador;
+  
+  document.getElementById('inputSom').value = somAtivo ? "true" : "false";
+  document.getElementById('inputTema').value = temaAtual;
+  
   document.getElementById('modalConfig').style.display = 'flex'; 
 }
 
@@ -742,8 +941,10 @@ function salvarConfig() {
   porcMaiorForrada = parseFloat(document.getElementById('inputMaiorForrada').value) || porcMaiorForrada;
   porcOrganizador = parseFloat(document.getElementById('inputOrganizador').value) || porcOrganizador;
   
-  const corFundo = document.getElementById('inputCorFundo').value;
-  document.body.style.background = `radial-gradient(circle at top, ${corFundo}, #000000)`;
+  somAtivo = document.getElementById('inputSom').value === "true";
+  temaAtual = document.getElementById('inputTema').value;
+  
+  document.body.setAttribute('data-theme', temaAtual);
 
   calcularValores();
   salvarProgresso();
