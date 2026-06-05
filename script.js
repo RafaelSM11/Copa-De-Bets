@@ -135,7 +135,6 @@ function iniciarCopa() {
   confrontos = [];
   confrontos[1] = []; 
 
-  // Lógica inteligente: Aceita número ímpar e aplica "BYE" automático
   for (let i = 0; i < listaEmbaralhada.length; i += 2) {
     const j1 = listaEmbaralhada[i];
     const j2 = listaEmbaralhada[i+1] || "BYE (Avança Direto)";
@@ -450,7 +449,6 @@ function sortearParticipantes() {
 
   if (nomes.length === 0) { alert("Digite ao menos 1 nome na caixa de sorteio."); return; }
   
-  // A quantidade do sorteio agora é totalmente livre e NÃO sobrepõe a quantidade da Copa
   const qtd = parseInt(document.getElementById('qtdSortear').value) || 1;
   if (qtd > nomes.length) { alert("A quantidade a sortear não pode ser maior que o número de nomes disponíveis."); return; }
 
@@ -477,23 +475,35 @@ function renderizarListaSorteio() {
   const lista = document.createElement('div');
   lista.className = "lista-sorteados";
   
+  // Puxa a lista atual da caixa de texto para ver quem já foi aprovado
+  const textarea = document.getElementById('textareaParticipantes');
+  const atuais = textarea.value.split('\n').map(n => n.trim()).filter(n => n !== "");
+
   nomesSorteadosState.forEach((nome, i) => {
     const item = document.createElement('div');
     item.className = "item-sorteado";
-    item.innerHTML = `
-      <span class="nome-sorteado">${i + 1}. ${nome}</span>
-      <div class="acoes-sorteio">
-        <button class="btn-acao-sorteio btn-ok" onclick="confirmarSorteado('${nome}', this.parentElement.parentElement)" title="Aprovar e adicionar à copa">✅</button>
-        <button class="btn-acao-sorteio btn-x" onclick="trocarSorteado(${i})" title="Remover e puxar o próximo da reserva">❌</button>
-      </div>
-    `;
+    
+    // Se o nome já estiver na caixa principal da Copa, renderiza como aprovado
+    if (atuais.includes(nome)) {
+      item.classList.add('sorteado-confirmado');
+      item.innerHTML = `<span class="nome-sorteado" style="text-decoration: line-through;">${i + 1}. ${nome}</span> <span style="color:#00ff88; font-weight:bold; font-size:14px;">✅ Confirmado na Copa</span>`;
+    } else {
+      // Se não, mostra os botões para aprovar ou remover
+      item.innerHTML = `
+        <span class="nome-sorteado">${i + 1}. ${nome}</span>
+        <div class="acoes-sorteio">
+          <button class="btn-acao-sorteio btn-ok" onclick="confirmarSorteado('${nome}')" title="Aprovar e adicionar à copa">✅</button>
+          <button class="btn-acao-sorteio btn-x" onclick="trocarSorteado(${i})" title="Remover e puxar o próximo da reserva">❌</button>
+        </div>
+      `;
+    }
     lista.appendChild(item);
   });
   
   div.appendChild(lista);
 }
 
-function confirmarSorteado(nome, rowElement) {
+function confirmarSorteado(nome) {
   const textarea = document.getElementById('textareaParticipantes');
   let atuais = textarea.value.split('\n').map(n => n.trim()).filter(n => n !== "");
   
@@ -502,13 +512,14 @@ function confirmarSorteado(nome, rowElement) {
     return;
   }
 
+  // Adiciona o nome na caixa de participantes da copa
   if (!atuais.includes(nome)) {
     atuais.push(nome);
     textarea.value = atuais.join('\n');
   }
   
-  rowElement.classList.add('sorteado-confirmado');
-  rowElement.innerHTML = `<span class="nome-sorteado" style="text-decoration: line-through;">${nome}</span> <span style="color:#00ff88; font-weight:bold; font-size:14px;">✅ Confirmado na Copa</span>`;
+  // Re-renderiza a lista para atualizar visualmente (transformar em card verde confirmado)
+  renderizarListaSorteio();
 }
 
 function trocarSorteado(index) {
