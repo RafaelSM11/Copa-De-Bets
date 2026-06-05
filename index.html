@@ -189,7 +189,6 @@
 
       <hr style="border-color:#555; margin: 20px 0;">
       
-      <!-- Limiar Mega Forrada -->
       <h3 style="color:var(--cor-secundaria); margin-bottom: 10px;">🚨 Alerta Live Stream</h3>
       <label for="inputLimiarMega">Disparar "Mega Forrada" a partir de Lucro (R$):</label>
       <input type="number" id="inputLimiarMega" step="10" min="0" value="500">
@@ -256,7 +255,6 @@
       
       <div style="position: relative; margin: 30px auto; width: 300px; height: 300px;">
         <canvas id="canvasRoleta" width="300" height="300"></canvas>
-        <!-- Ponteiro da Roleta -->
         <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 40px solid var(--cor-secundaria); z-index: 10; filter: drop-shadow(0px 4px 2px rgba(0,0,0,0.5));"></div>
       </div>
 
@@ -269,11 +267,34 @@
     </div>
   </div>
 
-  <!-- Modal VS (Cara a Cara) -->
-  <div id="telaVs" class="tela-vs">
-    <div class="vs-player-left" id="vsP1">Jogador 1</div>
-    <div class="vs-center-logo">VS</div>
-    <div class="vs-player-right" id="vsP2">Jogador 2</div>
+  <!-- Modal VS (Tale of the Tape - Estatísticas de Luta) -->
+  <div id="telaVs" class="tela-vs" onclick="fecharVs()">
+    <div class="vs-container">
+      <div class="vs-header">
+        <div class="vs-player-left" id="vsP1">Jogador 1</div>
+        <div class="vs-center-logo">VS</div>
+        <div class="vs-player-right" id="vsP2">Jogador 2</div>
+      </div>
+      
+      <div class="vs-stats" id="vsStats">
+        <div class="stat-row">
+          <div class="stat-left" id="statP1Camp">0</div>
+          <div class="stat-label">🏆 CAMPEÃO</div>
+          <div class="stat-right" id="statP2Camp">0</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-left" id="statP1Vice">0</div>
+          <div class="stat-label">🥈 VICE</div>
+          <div class="stat-right" id="statP2Vice">0</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-left" id="statP1Forr">0</div>
+          <div class="stat-label">🔥 FORRADAS</div>
+          <div class="stat-right" id="statP2Forr">0</div>
+        </div>
+      </div>
+      <p style="color: #666; margin-top: 20px; font-size: 12px; font-style: italic;">Clique em qualquer lugar para pular</p>
+    </div>
   </div>
 
   <script src="script.js"></script>

@@ -32,7 +32,7 @@ let porcMaiorForrada = 10;
 let porcOrganizador = 20;
 let somAtivo = true;
 let temaAtual = "padrao";
-let limiarMegaForrada = 500; // NOVO: Gatilho da Animação
+let limiarMegaForrada = 500; 
 
 let jogosPG = [];
 let jogosPragmatic = [];
@@ -561,7 +561,6 @@ function renderizarConfrontosBracket() {
         const liquidoJ1 = ganhoJ1 - custoEntrada;
         const liquidoJ2 = ganhoJ2 - custoEntrada;
 
-        // Classes de Mega Forrada ativadas apenas após confirmação do JS
         let p1BoxClass = `player-input-box ${liquidoJ1 >= limiarMegaForrada ? 'mega-box' : ''}`;
         let p2BoxClass = `player-input-box ${liquidoJ2 >= limiarMegaForrada ? 'mega-box' : ''}`;
         
@@ -593,7 +592,7 @@ function renderizarConfrontosBracket() {
               <option value="PG" ${provSelecionado === "PG" ? "selected" : ""}>PG (R$ 30)</option>
               <option value="Pragmatic" ${provSelecionado === "Pragmatic" ? "selected" : ""}>Pragmatic (R$ 40)</option>
             </select>
-            <button class="btn-vs" onclick="mostrarCaraACara(${f}, ${m})" title="Apresentar Confronto" ${isConfirmado ? 'disabled' : ''}>⚔️</button>
+            <button class="btn-vs" onclick="mostrarCaraACara(${f}, ${m})" title="Estatísticas do Confronto" ${isConfirmado ? 'disabled' : ''}>⚔️</button>
             <button class="btn-roleta" onclick="abrirRoleta(${f}, ${m})" title="Sortear Jogo" ${isConfirmado ? 'disabled' : ''}>🎰</button>
           </div>
           
@@ -698,7 +697,6 @@ function verificarMegaForrada(liquido, elementoCaixa) {
   
   if (liquido >= limiarMegaForrada) {
      elementoCaixa.classList.add('mega-box');
-     // Verifica se já notificou para não ficar apitando a cada número digitado
      if(elementoCaixa.dataset.megaNotified !== "true") {
          dispararAlertaMegaForrada();
          elementoCaixa.dataset.megaNotified = "true";
@@ -1029,7 +1027,7 @@ function abrirConfig() {
   
   document.getElementById('inputSom').value = somAtivo ? "true" : "false";
   document.getElementById('inputTema').value = temaAtual;
-  document.getElementById('inputLimiarMega').value = limiarMegaForrada; // Carrega limiar
+  document.getElementById('inputLimiarMega').value = limiarMegaForrada; 
   
   document.getElementById('inputJogosPG').value = jogosPG.join('\n');
   document.getElementById('inputJogosPragmatic').value = jogosPragmatic.join('\n');
@@ -1069,13 +1067,28 @@ function salvarConfig() {
 }
 
 // ============================
-// Sistema Cara a Cara (VS)
+// Sistema Cara a Cara (VS) + ESTATÍSTICAS (Tale of the Tape)
 // ============================
+let vsTimeout;
+
 function mostrarCaraACara(fase, matchIndex) {
   const dupla = confrontos[fase][matchIndex];
+  const p1 = dupla[0];
+  const p2 = dupla[1];
   
-  document.getElementById('vsP1').innerHTML = dupla[0];
-  document.getElementById('vsP2').innerHTML = dupla[1];
+  document.getElementById('vsP1').innerHTML = p1;
+  document.getElementById('vsP2').innerHTML = p2;
+
+  // Busca dados globais (ou zera se for novato)
+  const statsP1 = estatisticasGlobais[p1] || {campeao: 0, vice: 0, forrada: 0};
+  const statsP2 = estatisticasGlobais[p2] || {campeao: 0, vice: 0, forrada: 0};
+
+  document.getElementById('statP1Camp').textContent = statsP1.campeao;
+  document.getElementById('statP2Camp').textContent = statsP2.campeao;
+  document.getElementById('statP1Vice').textContent = statsP1.vice;
+  document.getElementById('statP2Vice').textContent = statsP2.vice;
+  document.getElementById('statP1Forr').textContent = statsP1.forrada;
+  document.getElementById('statP2Forr').textContent = statsP2.forrada;
 
   const tela = document.getElementById('telaVs');
   tela.style.display = 'flex';
@@ -1084,20 +1097,28 @@ function mostrarCaraACara(fase, matchIndex) {
   const left = document.querySelector('.vs-player-left');
   const right = document.querySelector('.vs-player-right');
   const center = document.querySelector('.vs-center-logo');
+  const statsBox = document.getElementById('vsStats');
   
   left.style.animation = 'none'; 
   right.style.animation = 'none'; 
   center.style.animation = 'none';
+  statsBox.style.animation = 'none';
   
   setTimeout(() => {
       left.style.animation = 'slideInLeft 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards';
       right.style.animation = 'slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards';
       center.style.animation = 'zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.3s';
+      statsBox.style.animation = 'popInStats 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.8s';
   }, 10);
 
-  setTimeout(() => {
-      tela.style.display = 'none';
-  }, 3500);
+  clearTimeout(vsTimeout);
+  vsTimeout = setTimeout(() => {
+      fecharVs();
+  }, 6000); 
+}
+
+function fecharVs() {
+  document.getElementById('telaVs').style.display = 'none';
 }
 
 // ============================
@@ -1217,6 +1238,7 @@ function fecharCardFinal() { document.getElementById('cardFinal').style.display 
 
 // Expõe funções pro HTML
 window.mostrarCaraACara = mostrarCaraACara;
+window.fecharVs = fecharVs;
 
 // Inicia chamando o Load
 window.onload = () => {
