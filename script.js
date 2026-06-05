@@ -25,7 +25,7 @@ let estatisticasGlobais = JSON.parse(localStorage.getItem('FellCup_Estatisticas'
 // ============================
 // Configurações padrão e Roletas
 // ============================
-let nomeCopa = "FELCUP ENGINE 2026 by@bobbyzera";
+let nomeCopa = "FELCUP ENGIENE 2026 by@bobbyzera";
 let porcCampeao = 55;
 let porcVice = 15;
 let porcMaiorForrada = 10;
@@ -521,7 +521,6 @@ function renderizarConfrontosBracket() {
             }
         }
         
-        // ADICIONADO: Botão VS (⚔️) e Botão Roleta (🎰) no topo
         matchDiv.innerHTML = `
           <div class="bracket-header">
             <select onchange="alterarProvedor(${f}, ${m}, this.value)" ${isConfirmado ? 'disabled' : ''}>
@@ -988,7 +987,6 @@ function mostrarCaraACara(fase, matchIndex) {
   tela.style.display = 'flex';
   tocarSom('vs');
 
-  // Reseta animações
   const left = document.querySelector('.vs-player-left');
   const right = document.querySelector('.vs-player-right');
   const center = document.querySelector('.vs-center-logo');
@@ -997,14 +995,12 @@ function mostrarCaraACara(fase, matchIndex) {
   right.style.animation = 'none'; 
   center.style.animation = 'none';
   
-  // Força reflow e aplica as classes de entrada
   setTimeout(() => {
       left.style.animation = 'slideInLeft 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards';
       right.style.animation = 'slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards';
       center.style.animation = 'zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.3s';
   }, 10);
 
-  // Fecha depois de 3.5 segundos
   setTimeout(() => {
       tela.style.display = 'none';
   }, 3500);
