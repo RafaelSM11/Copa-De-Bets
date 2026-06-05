@@ -27,7 +27,7 @@ let porcVice = 15;
 let porcMaiorForrada = 10;
 let porcOrganizador = 20;
 
-// Custo por jogador em cada provedor escolhido no confronto (Para o Balanço Líquido)
+// Custo por jogador em cada provedor escolhido no confronto
 const CUSTO_PG_POR_JOGADOR = 30.00;
 const CUSTO_PRAGMATIC_POR_JOGADOR = 40.00;
 
@@ -135,7 +135,7 @@ function iniciarCopa() {
   confrontos = [];
   confrontos[1] = []; 
 
-  // Lógica inteligente: Aceita qualquer número de participantes (Mesmo ímpares) e aplica "BYE" automático.
+  // Lógica inteligente: Aceita número ímpar e aplica "BYE" automático
   for (let i = 0; i < listaEmbaralhada.length; i += 2) {
     const j1 = listaEmbaralhada[i];
     const j2 = listaEmbaralhada[i+1] || "BYE (Avança Direto)";
@@ -450,13 +450,9 @@ function sortearParticipantes() {
 
   if (nomes.length === 0) { alert("Digite ao menos 1 nome na caixa de sorteio."); return; }
   
-  // Agora permite inputs flexíveis numéricos
-  const qtd = parseInt(document.getElementById('qtdSortear').value) || 16;
+  // A quantidade do sorteio agora é totalmente livre e NÃO sobrepõe a quantidade da Copa
+  const qtd = parseInt(document.getElementById('qtdSortear').value) || 1;
   if (qtd > nomes.length) { alert("A quantidade a sortear não pode ser maior que o número de nomes disponíveis."); return; }
-
-  const boxQtdGeral = document.getElementById('qtdParticipantes');
-  boxQtdGeral.value = qtd;
-  atualizarQuantidadeParticipantes();
 
   const embaralhados = embaralhar(nomes.slice());
   
