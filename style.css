@@ -114,6 +114,17 @@ button:hover {
   border-color: #ffd700;
 }
 
+/* Estilo Especial para o Botão PDF */
+.btn-pdf {
+  background: #0056b3;
+  border-color: #004494;
+}
+
+.btn-pdf:hover {
+  background: #004494;
+  box-shadow: 0 0 12px rgba(0, 86, 179, 0.6);
+}
+
 /* Balanço Financeiro Individual (Líquido) */
 .balanco-financeiro {
   margin-top: 8px;
@@ -231,6 +242,33 @@ button:hover {
 @keyframes brilhar {
   from { text-shadow: 0 0 6px #00ff88; }
   to { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ffcc; }
+}
+
+/* ============================
+   Estilos do Relatório PDF (Oculto)
+============================ */
+.pdf-container {
+  display: none;
+  padding: 40px;
+  background: #ffffff;
+  color: #333333;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-container h1 {
+  text-align: center;
+  color: #111;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+.pdf-container hr {
+  border: 1px solid #cccccc;
+  margin-bottom: 20px;
+}
+
+.pdf-section {
+  margin-bottom: 30px;
 }
 
 /* ============================

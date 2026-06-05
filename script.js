@@ -17,7 +17,7 @@ let qtdParticipantes = 16;
 // ============================
 // Configurações padrão
 // ============================
-let nomeCopa = "Copa de Cassino";
+let nomeCopa = "Fell Cup Engiene 2026 by@Bobbyzera";
 let porcCampeao = 55;
 let porcVice = 15;
 let porcMaiorForrada = 10;
@@ -60,23 +60,19 @@ function calcularValores() {
   const bancaInicial = qtdParticipantes * valorEntrada;
   let somaLiquido = 0;
 
-  // Varre os ganhos que já foram digitados e calcula o impacto na banca
   for (let chave in ganhosJogadores) {
-    // chave tem o formato "fase_index_NomeJogador"
     const partes = chave.split('_');
     const chaveConfronto = `${partes[0]}_${partes[1]}`;
     
-    // Descobre o custo com base na provedora daquele confronto específico
     const provSelecionado = provedoresConfrontos[chaveConfronto] || "PG";
     const custoEntrada = provSelecionado === "PG" ? CUSTO_PG_POR_JOGADOR : CUSTO_PRAGMATIC_POR_JOGADOR;
     
     const ganho = ganhosJogadores[chave] || 0;
-    const liquido = ganho - custoEntrada; // Se perdeu tudo, vai gerar número negativo
+    const liquido = ganho - custoEntrada; 
     
     somaLiquido += liquido;
   }
 
-  // Se todos perderem muito, a banca cai, mas trava no 0 para não bugar
   totalBanca = bancaInicial + somaLiquido;
   if (totalBanca < 0) totalBanca = 0; 
 
@@ -111,7 +107,7 @@ function atualizarValoresPremiacao() {
 
   const campoMaiorForrada = document.getElementById('maiorForrada');
   if (maiorGanho > 0 && jogadorMaiorForrada) {
-    campoMaiorForrada.textContent = `${jogadorMaiorForrada} (R$ ${maiorGanho.toFixed(2)}) + Bônus: R$ ${premioMaiorForrada.toFixed(2)}`;
+    campoMaiorForrada.textContent = `${jogadorMaiorForrada} (R$ ${maiorGanho.toFixed(2)}) Prêmio: R$ ${premioMaiorForrada.toFixed(2)}`;
   } else {
     campoMaiorForrada.textContent = "-";
   }
@@ -163,6 +159,13 @@ function renderizarConfrontos() {
   const container = document.getElementById('confrontos');
   container.innerHTML = "";
 
+  const btnAvancar = document.getElementById('btnAvancar');
+  if(lista.length === 1) {
+    btnAvancar.style.display = 'none';
+  } else {
+    btnAvancar.style.display = 'inline-block';
+  }
+
   lista.forEach((dupla, index) => {
     const chaveElemento = `${faseAtual}_${index}`;
     const provSelecionado = provedoresConfrontos[chaveElemento] || "PG";
@@ -199,6 +202,7 @@ function renderizarConfrontos() {
       
       <div class="dupla-confronto" style="display:flex; justify-content: space-around; align-items:stretch; gap:20px;">
         
+        <!-- Jogador 1 -->
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; background: rgba(50,50,50,0.2); padding: 10px; border-radius: 8px;">
           <button class="btn-jogador ${vencedorAtual === dupla[0] ? 'vencedor-ativo' : ''}" style="width:100%; max-width:100%; cursor:default;" disabled>
             ${dupla[0]}
@@ -214,6 +218,7 @@ function renderizarConfrontos() {
 
         <div style="display:flex; align-items:center; font-weight:bold; color:#ffd700; font-size:20px;">VS</div>
 
+        <!-- Jogador 2 -->
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; background: rgba(50,50,50,0.2); padding: 10px; border-radius: 8px;">
           <button class="btn-jogador ${vencedorAtual === dupla[1] ? 'vencedor-ativo' : ''}" style="width:100%; max-width:100%; cursor:default;" disabled>
             ${dupla[1]}
@@ -250,7 +255,7 @@ function renderizarConfrontos() {
 
 function alterarProvedorConfronto(index, provedor) {
   provedoresConfrontos[`${faseAtual}_${index}`] = provedor;
-  calcularValores(); // Atualiza a banca na mesma hora
+  calcularValores(); 
   renderizarValoresLiquidosIndividuais(index);
 }
 
@@ -312,6 +317,12 @@ function confirmarConfrontoAutomatico(index) {
 
   confrontosConfirmados[chaveElemento] = true;
   renderizarConfrontos();
+
+  if (confrontos[faseAtual].length === 1) {
+    setTimeout(() => {
+      avancarFase();
+    }, 500); 
+  }
 }
 
 function editarConfronto(index) {
@@ -358,14 +369,17 @@ function voltarFase() {
 function finalizarCampeonato(campeao, duplaFinal) {
   const vice = duplaFinal[0] === campeao ? duplaFinal[1] : duplaFinal[0];
   
-  document.getElementById('vencedorFinal').textContent = campeao;
-  document.getElementById('vencedorVice').textContent = vice;
-  
+  const premioCampeao = totalBanca * (porcCampeao / 100);
+  const premioVice = totalBanca * (porcVice / 100);
   const premioMaiorForrada = totalBanca * (porcMaiorForrada / 100);
   const premioOrganizador = totalBanca * (porcOrganizador / 100);
+
+  document.getElementById('vencedorFinal').textContent = campeao;
+  document.getElementById('vencedorPremioCampeao').textContent = `R$ ${premioCampeao.toFixed(2)}`;
+  document.getElementById('vencedorVice').textContent = `${vice} (R$ ${premioVice.toFixed(2)})`;
   
   if (maiorGanho > 0 && jogadorMaiorForrada) {
-    document.getElementById('vencedorMaiorForrada').textContent = `${jogadorMaiorForrada} (R$ ${maiorGanho.toFixed(2)}) + Bônus: R$ ${premioMaiorForrada.toFixed(2)}`;
+    document.getElementById('vencedorMaiorForrada').textContent = `${jogadorMaiorForrada} (R$ ${maiorGanho.toFixed(2)}) Prêmio: R$ ${premioMaiorForrada.toFixed(2)}`;
   } else {
     document.getElementById('vencedorMaiorForrada').textContent = "-";
   }
@@ -375,7 +389,46 @@ function finalizarCampeonato(campeao, duplaFinal) {
 }
 
 // ============================
-// Sorteio Animado
+// Geração do PDF
+// ============================
+function gerarPDF() {
+  document.getElementById('pdfTitulo').textContent = nomeCopa;
+  
+  const hoje = new Date();
+  const dataFormatada = hoje.toLocaleDateString('pt-BR');
+  document.getElementById('pdfData').textContent = `Gerado em: ${dataFormatada}`;
+  
+  document.getElementById('pdfCampeao').textContent = document.getElementById('vencedorFinal').textContent;
+  document.getElementById('pdfVice').textContent = document.getElementById('vencedorVice').textContent.split(' (')[0]; 
+  document.getElementById('pdfMaiorForrada').textContent = document.getElementById('vencedorMaiorForrada').textContent;
+  
+  document.getElementById('pdfBanca').textContent = totalBanca.toFixed(2);
+  document.getElementById('pdfPremioCampeao').textContent = (totalBanca * (porcCampeao / 100)).toFixed(2);
+  document.getElementById('pdfPremioVice').textContent = (totalBanca * (porcVice / 100)).toFixed(2);
+  document.getElementById('pdfPremioMaiorForrada').textContent = (totalBanca * (porcMaiorForrada / 100)).toFixed(2);
+  document.getElementById('pdfPremioOrganizador').textContent = (totalBanca * (porcOrganizador / 100)).toFixed(2);
+
+  document.getElementById('pdfParticipantes').innerHTML = participantes.map(p => `• ${p}`).join('<br>');
+
+  const elemento = document.getElementById('relatorioPDF');
+  
+  elemento.style.display = 'block';
+
+  const opt = {
+    margin:       15,
+    filename:     `${nomeCopa.replace(/\s+/g, '_')}_${hoje.getTime()}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(elemento).save().then(() => {
+    elemento.style.display = 'none';
+  });
+}
+
+// ============================
+// Sorteio Animado e Configurações
 // ============================
 function toggleBlocoSorteio() {
   const bloco = document.getElementById('blocoSorteio');
@@ -418,9 +471,41 @@ function mostrarSorteados(sorteados) {
   });
 }
 
-function abrirConfig() { document.getElementById('modalConfig').style.display = 'flex'; }
-function fecharConfig() { document.getElementById('modalConfig').style.display = 'none'; }
-function salvarConfig() { alert("Configurações salvas!"); fecharConfig(); }
+function abrirConfig() { 
+  document.getElementById('inputNomeCopa').value = nomeCopa;
+  document.getElementById('inputCampeao').value = porcCampeao;
+  document.getElementById('inputVice').value = porcVice;
+  document.getElementById('inputMaiorForrada').value = porcMaiorForrada;
+  document.getElementById('inputOrganizador').value = porcOrganizador;
+  document.getElementById('modalConfig').style.display = 'flex'; 
+}
+
+function fecharConfig() { 
+  document.getElementById('modalConfig').style.display = 'none'; 
+}
+
+function salvarConfig() { 
+  const novoNome = document.getElementById('inputNomeCopa').value;
+  if (novoNome.trim() !== "") {
+    nomeCopa = novoNome;
+    document.getElementById('tituloCopa').textContent = nomeCopa;
+    document.title = nomeCopa;
+  }
+
+  porcCampeao = parseFloat(document.getElementById('inputCampeao').value) || porcCampeao;
+  porcVice = parseFloat(document.getElementById('inputVice').value) || porcVice;
+  porcMaiorForrada = parseFloat(document.getElementById('inputMaiorForrada').value) || porcMaiorForrada;
+  porcOrganizador = parseFloat(document.getElementById('inputOrganizador').value) || porcOrganizador;
+  
+  const corFundo = document.getElementById('inputCorFundo').value;
+  document.body.style.background = `radial-gradient(circle at top, ${corFundo}, #000000)`;
+
+  calcularValores();
+
+  alert("Configurações salvas com sucesso!"); 
+  fecharConfig(); 
+}
+
 function abrirUltimasCopas() { document.getElementById('modalUltimasCopas').style.display = 'flex'; }
 function fecharUltimasCopas() { document.getElementById('modalUltimasCopas').style.display = 'none'; }
 function abrirRanking() { document.getElementById('modalRanking').style.display = 'flex'; }
