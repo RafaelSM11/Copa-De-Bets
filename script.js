@@ -25,7 +25,7 @@ let estatisticasGlobais = JSON.parse(localStorage.getItem('FellCup_Estatisticas'
 // ============================
 // Configurações padrão e Roletas
 // ============================
-let nomeCopa = "Fell Cup Engiene 2026 by@Bobbyzera";
+let nomeCopa = "FELCUP ENGINE 2026 by@bobbyzera";
 let porcCampeao = 55;
 let porcVice = 15;
 let porcMaiorForrada = 10;
@@ -512,7 +512,6 @@ function renderizarConfrontosBracket() {
             }
         }
         
-        // --- AQUI ESTÁ A IMPLEMENTAÇÃO DO BOTÃO DA ROLETA ---
         matchDiv.innerHTML = `
           <div class="bracket-header">
             <select onchange="alterarProvedor(${f}, ${m}, this.value)" ${isConfirmado ? 'disabled' : ''}>
@@ -993,7 +992,7 @@ function abrirRoleta(f, m) {
 }
 
 function fecharRoleta() {
-  if (roletaGirando) return; // Impede fechar enquanto gira
+  if (roletaGirando) return; 
   document.getElementById('modalRoleta').style.display = 'none';
 }
 
@@ -1027,7 +1026,6 @@ function desenharRoleta() {
     ctx.textAlign = "right";
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 16px Arial";
-    // Escreve o texto perto da borda
     ctx.fillText(roletaAtualJogos[i], radius - 20, 5);
     ctx.restore();
   }
@@ -1039,26 +1037,23 @@ function girarRoleta() {
   document.getElementById('btnGirarRoleta').disabled = true;
   document.getElementById('resultadoRoleta').innerHTML = "<span style='color:#aaa;'>Sorteando...</span>";
   
-  // Gira entre 5 e 10 voltas completas + ângulo aleatório extra
   const voltasIniciais = Math.floor(Math.random() * 5) + 5; 
   const anguloExtra = Math.random() * Math.PI * 2;
   const anguloFinal = anguloAtual + (voltasIniciais * Math.PI * 2) + anguloExtra;
   
   let startTime = null;
-  const duration = 4000; // 4 segundos rodando
+  const duration = 4000; 
 
   function animar(timestamp) {
     if (!startTime) startTime = timestamp;
     const progress = timestamp - startTime;
     const percent = Math.min(progress / duration, 1);
     
-    // Efeito ease-out (começa rápido e para devagar)
     const easeOut = 1 - Math.pow(1 - percent, 4);
     
     anguloAtual = anguloFinal * easeOut;
     desenharRoleta();
     
-    // Efeito sonoro de "tick" enquanto gira
     if (progress % 150 < 20) tocarSom('flip');
     
     if (percent < 1) {
@@ -1067,7 +1062,6 @@ function girarRoleta() {
       roletaGirando = false;
       tocarSom('win');
       
-      // Lógica matemática para saber qual fatia parou no topo (ponteiro em 270 graus / 1.5 PI)
       const normalizedAngle = anguloAtual % (2 * Math.PI);
       const sliceAngle = (2 * Math.PI) / roletaAtualJogos.length;
       let pointerAngle = (1.5 * Math.PI - normalizedAngle);
