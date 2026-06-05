@@ -5,16 +5,16 @@ let participantes = [];
 let valorEntrada = 50.00; // Valor padrão de entrada na banca
 let totalBanca = 0;
 let faseAtual = 1; 
-let confrontos = [];
-let provedoresConfrontos = {}; // { 'fase_index': 'PG' }
-let vencedoresConfrontos = {}; // { 'fase_index': 'Nome' }
-let confrontosConfirmados = {}; // { 'fase_index': true/false }
-let ganhosJogadores = {};       // { 'fase_index_Nome': 150.00 }
+let confrontos = []; // Array 2D: confrontos[fase][index_match] = [Jog1, Jog2]
+let provedoresConfrontos = {}; 
+let vencedoresConfrontos = {}; 
+let confrontosConfirmados = {}; 
+let ganhosJogadores = {};       
 let maiorGanho = 0;
 let jogadorMaiorForrada = "";
 let qtdParticipantes = 16;
+let totalFases = 1; // Calculado no início
 
-// Variáveis de Estado do Sorteio
 let nomesSorteadosState = [];
 let nomesReservaState = [];
 
@@ -27,7 +27,6 @@ let porcVice = 15;
 let porcMaiorForrada = 10;
 let porcOrganizador = 20;
 
-// Custo por jogador em cada provedor escolhido no confronto
 const CUSTO_PG_POR_JOGADOR = 30.00;
 const CUSTO_PRAGMATIC_POR_JOGADOR = 40.00;
 
@@ -59,7 +58,6 @@ function atualizarValoresGerais() {
   calcularValores();
 }
 
-// A banca soma APENAS O LÍQUIDO de cada jogador (Ganho - Custo do Bônus)
 function calcularValores() {
   const bancaInicial = qtdParticipantes * valorEntrada;
   let somaLiquido = 0;
@@ -142,165 +140,238 @@ function iniciarCopa() {
     provedoresConfrontos[`1_${confrontos[1].length - 1}`] = "PG";
   }
 
+  // Calcula total de Fases para desenhar a árvore completa
+  let tempMatches = confrontos[1].length;
+  totalFases = 1;
+  while(tempMatches > 1) {
+    tempMatches = Math.ceil(tempMatches / 2);
+    totalFases++;
+  }
+
   faseAtual = 1;
   document.getElementById('setup').style.display = 'none';
   document.getElementById('blocoSorteio').style.display = 'none';
   document.getElementById('copa').style.display = 'block';
 
-  renderizarConfrontos();
+  renderizarConfrontosBracket();
 }
 
-function getNomeFase(totalConfrontos) {
-  if (totalConfrontos === 1) return "Grande Final";
-  if (totalConfrontos === 2) return "Semifinal";
-  if (totalConfrontos === 3 || totalConfrontos === 4) return "Quartas de Final";
-  if (totalConfrontos > 4 && totalConfrontos <= 8) return "Oitavas de Final";
-  return "Fase de Confrontos";
+function getNomeFase(faseNum, total) {
+  const matches = Math.ceil(confrontos[1].length / Math.pow(2, faseNum - 1));
+  if (matches === 1) return "Grande Final";
+  if (matches === 2) return "Semifinal";
+  if (matches === 3 || matches === 4) return "Quartas de Final";
+  if (matches > 4 && matches <= 8) return "Oitavas de Final";
+  return `Fase ${faseNum}`;
 }
 
-function renderizarConfrontos() {
-  const lista = confrontos[faseAtual];
-  document.getElementById('faseNome').textContent = getNomeFase(lista.length);
+// ============================
+// Renderização do Chaveamento (Bracket)
+// ============================
+function renderizarConfrontosBracket() {
+  const wrapper = document.getElementById('confrontos');
+  wrapper.innerHTML = "";
 
-  const container = document.getElementById('confrontos');
-  container.innerHTML = "";
-
+  document.getElementById('faseNome').textContent = getNomeFase(faseAtual, totalFases) + ` (Fase ${faseAtual} de ${totalFases})`;
+  
   const btnAvancar = document.getElementById('btnAvancar');
-  if(lista.length === 1) {
-    btnAvancar.style.display = 'none';
-  } else {
-    btnAvancar.style.display = 'inline-block';
+  const btnVoltar = document.getElementById('btnVoltar');
+  
+  btnAvancar.style.display = faseAtual > totalFases ? 'none' : 'inline-block';
+  btnVoltar.style.display = faseAtual === 1 ? 'none' : 'inline-block';
+
+  let matchesInPhase = confrontos[1].length;
+
+  for (let f = 1; f <= totalFases; f++) {
+    const colDiv = document.createElement('div');
+    colDiv.className = 'bracket-col';
+
+    const colTitle = document.createElement('div');
+    colTitle.className = 'bracket-col-title';
+    colTitle.textContent = getNomeFase(f, totalFases);
+    colDiv.appendChild(colTitle);
+
+    for (let m = 0; m < matchesInPhase; m++) {
+      const matchDiv = document.createElement('div');
+      
+      // Se a fase for PASSADA (Já resolvida)
+      if (f < faseAtual) {
+        const dupla = confrontos[f][m];
+        const vencedor = vencedoresConfrontos[`${f}_${m}`];
+        matchDiv.className = 'bracket-box locked';
+        
+        let p1Class = "player-locked";
+        let p2Class = "player-locked";
+        let p1Name = dupla[0];
+        let p2Name = dupla[1];
+
+        // Aplica Fade-out e Coroa de acordo com o vencedor
+        if (vencedor === dupla[0]) {
+            p1Class += " winner-highlight";
+            p2Class += " loser-fade";
+            p1Name = `👑 ${dupla[0]}`;
+        } else if (vencedor === dupla[1]) {
+            p2Class += " winner-highlight";
+            p1Class += " loser-fade";
+            p2Name = `👑 ${dupla[1]}`;
+        }
+
+        matchDiv.innerHTML = `
+          <div class="${p1Class}">${p1Name}</div>
+          <div class="${p2Class}">${p2Name}</div>
+        `;
+      } 
+      // Se a fase for ATUAL (Aguardando inputs)
+      else if (f === faseAtual) {
+        const dupla = confrontos[f][m];
+        const chaveElemento = `${f}_${m}`;
+        const provSelecionado = provedoresConfrontos[chaveElemento] || "PG";
+        const vencedorAtual = vencedoresConfrontos[chaveElemento] || null;
+        const isConfirmado = confrontosConfirmados[chaveElemento] || false;
+
+        const ganhoJ1 = ganhosJogadores[`${chaveElemento}_${dupla[0]}`] || 0;
+        const ganhoJ2 = ganhosJogadores[`${chaveElemento}_${dupla[1]}`] || 0;
+
+        const custoEntrada = provSelecionado === "PG" ? CUSTO_PG_POR_JOGADOR : CUSTO_PRAGMATIC_POR_JOGADOR;
+        const liquidoJ1 = ganhoJ1 - custoEntrada;
+        const liquidoJ2 = ganhoJ2 - custoEntrada;
+
+        matchDiv.className = `bracket-box active ${isConfirmado ? 'confirmado' : ''}`;
+        
+        let p1BoxClass = "player-input-box";
+        let p2BoxClass = "player-input-box";
+        let p1Name = dupla[0];
+        let p2Name = dupla[1];
+        let p1NameClass = "player-name";
+        let p2NameClass = "player-name";
+
+        // Aplica o Fade-out e a Coroa dinamicamente na fase atual confirmada
+        if (isConfirmado) {
+            if (vencedorAtual === dupla[0]) {
+                p1BoxClass += " winner-highlight";
+                p2BoxClass += " loser-fade";
+                p1Name = `👑 ${dupla[0]}`;
+                p1NameClass += " crown";
+            } else if (vencedorAtual === dupla[1]) {
+                p2BoxClass += " winner-highlight";
+                p1BoxClass += " loser-fade";
+                p2Name = `👑 ${dupla[1]}`;
+                p2NameClass += " crown";
+            }
+        }
+        
+        matchDiv.innerHTML = `
+          <div class="bracket-header">
+            <select onchange="alterarProvedor(${f}, ${m}, this.value)" ${isConfirmado ? 'disabled' : ''}>
+              <option value="PG" ${provSelecionado === "PG" ? "selected" : ""}>PG (R$ 30)</option>
+              <option value="Pragmatic" ${provSelecionado === "Pragmatic" ? "selected" : ""}>Pragmatic (R$ 40)</option>
+            </select>
+          </div>
+          
+          <div class="${p1BoxClass}">
+            <div class="${p1NameClass}">${p1Name}</div>
+            <div class="player-data">
+              <input type="number" step="0.01" placeholder="R$ Ganho" value="${ganhoJ1 || ''}" 
+                oninput="salvarGanho(${f}, ${m}, '${dupla[0]}', 1, this.value)" ${isConfirmado ? 'disabled' : ''}>
+              <span id="liq_${f}_${m}_1" class="liq-span ${liquidoJ1 >= 0 ? 'lucro' : 'prejuizo'}">Liq: ${liquidoJ1 >= 0 ? '+' : ''}${liquidoJ1.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div class="vs-divider">VS</div>
+
+          <div class="${p2BoxClass}">
+            <div class="${p2NameClass}">${p2Name}</div>
+            <div class="player-data">
+              <input type="number" step="0.01" placeholder="R$ Ganho" value="${ganhoJ2 || ''}" 
+                oninput="salvarGanho(${f}, ${m}, '${dupla[1]}', 2, this.value)" ${isConfirmado ? 'disabled' : ''}>
+              <span id="liq_${f}_${m}_2" class="liq-span ${liquidoJ2 >= 0 ? 'lucro' : 'prejuizo'}">Liq: ${liquidoJ2 >= 0 ? '+' : ''}${liquidoJ2.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div class="bracket-footer">
+            ${!isConfirmado ? `
+              <button class="btn-conf" onclick="confirmarMatch(${f}, ${m})">🔒 Confirmar</button>
+            ` : `
+              <button class="btn-edit" onclick="editarMatch(${f}, ${m})">✏️ Editar</button>
+            `}
+          </div>
+        `;
+      } 
+      // Se a fase for FUTURA (Ainda não existem jogadores definidos)
+      else {
+        matchDiv.className = 'bracket-box future';
+        matchDiv.innerHTML = `
+          <div class="player-locked">???</div>
+          <div class="player-locked">???</div>
+        `;
+      }
+
+      colDiv.appendChild(matchDiv);
+    }
+    wrapper.appendChild(colDiv);
+    matchesInPhase = Math.ceil(matchesInPhase / 2);
   }
 
-  lista.forEach((dupla, index) => {
-    const chaveElemento = `${faseAtual}_${index}`;
-    const provSelecionado = provedoresConfrontos[chaveElemento] || "PG";
-    const vencedorAtual = vencedoresConfrontos[chaveElemento] || null;
-    const isConfirmado = confrontosConfirmados[chaveElemento] || false;
+  // Coluna do Campeão (Última Coluna)
+  if (faseAtual > totalFases) {
+    const colDiv = document.createElement('div');
+    colDiv.className = 'bracket-col';
+    const matchDiv = document.createElement('div');
+    matchDiv.className = 'bracket-box champion-box winner-highlight';
+    const campeao = document.getElementById('vencedorFinal').textContent;
+    matchDiv.innerHTML = `<h3>🏆 Campeão</h3><div class="player-locked crown" style="font-size:22px; padding:20px; border:none;">👑 ${campeao}</div>`;
+    colDiv.appendChild(matchDiv);
+    wrapper.appendChild(colDiv);
+  }
+}
 
-    const ganhoJ1 = ganhosJogadores[`${chaveElemento}_${dupla[0]}`] || 0;
-    const ganhoJ2 = ganhosJogadores[`${chaveElemento}_${dupla[1]}`] || 0;
-
-    const custoEntrada = provSelecionado === "PG" ? CUSTO_PG_POR_JOGADOR : CUSTO_PRAGMATIC_POR_JOGADOR;
-    
-    const liquidoJ1 = ganhoJ1 - custoEntrada;
-    const liquidoJ2 = ganhoJ2 - custoEntrada;
-
-    const classLiquidoJ1 = liquidoJ1 >= 0 ? 'lucro' : 'prejuizo';
-    const classLiquidoJ2 = liquidoJ2 >= 0 ? 'lucro' : 'prejuizo';
-
-    const div = document.createElement('div');
-    div.classList.add('confronto');
-    if (isConfirmado) div.classList.add('confronto-confirmado');
-
-    const selectDisabled = isConfirmado ? 'disabled' : '';
-    const inputsDisabled = isConfirmado ? 'disabled' : '';
-
-    div.innerHTML = `
-      <h3>Confronto ${index + 1} ${isConfirmado ? '✅ (Confirmado)' : ''}</h3>
-      <div style="margin-bottom: 15px;">
-        <label style="display:inline; margin-right:10px;">Provedora das Slots:</label>
-        <select onchange="alterarProvedorConfronto(${index}, this.value)" style="width:160px; display:inline-block;" ${selectDisabled}>
-          <option value="PG" ${provSelecionado === "PG" ? "selected" : ""}>PG (R$ 30 cada)</option>
-          <option value="Pragmatic" ${provSelecionado === "Pragmatic" ? "selected" : ""}>Pragmatic (R$ 40 cada)</option>
-        </select>
-      </div>
-      
-      <div class="dupla-confronto" style="display:flex; justify-content: space-around; align-items:stretch; gap:20px;">
-        
-        <div style="flex:1; display:flex; flex-direction:column; align-items:center; background: rgba(50,50,50,0.2); padding: 10px; border-radius: 8px;">
-          <button class="btn-jogador ${vencedorAtual === dupla[0] ? 'vencedor-ativo' : ''}" style="width:100%; max-width:100%; cursor:default;" disabled>
-            ${dupla[0]}
-          </button>
-          <div style="margin-top:10px; width:100%;">
-            <label style="font-size:12px; margin-top:0;">Valor Ganho (R$):</label>
-            <input type="number" step="0.01" placeholder="0.00" value="${ganhoJ1 || ''}" oninput="salvarGanhoJogador(${index}, '${dupla[0]}', this.value)" style="padding:6px; font-size:14px; margin-top:2px;" ${inputsDisabled}>
-            <div class="balanco-financeiro ${classLiquidoJ1}">
-              Líquido: ${liquidoJ1 >= 0 ? '+' : ''}${liquidoJ1.toFixed(2)}
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex; align-items:center; font-weight:bold; color:#ffd700; font-size:20px;">VS</div>
-
-        <div style="flex:1; display:flex; flex-direction:column; align-items:center; background: rgba(50,50,50,0.2); padding: 10px; border-radius: 8px;">
-          <button class="btn-jogador ${vencedorAtual === dupla[1] ? 'vencedor-ativo' : ''}" style="width:100%; max-width:100%; cursor:default;" disabled>
-            ${dupla[1]}
-          </button>
-          <div style="margin-top:10px; width:100%;">
-            <label style="font-size:12px; margin-top:0;">Valor Ganho (R$):</label>
-            <input type="number" step="0.01" placeholder="0.00" value="${ganhoJ2 || ''}" oninput="salvarGanhoJogador(${index}, '${dupla[1]}', this.value)" style="padding:6px; font-size:14px; margin-top:2px;" ${inputsDisabled}>
-            <div class="balanco-financeiro ${classLiquidoJ2}">
-              Líquido: ${liquidoJ2 >= 0 ? '+' : ''}${liquidoJ2.toFixed(2)}
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <div style="text-align:center; margin-top:15px; display:flex; justify-content:center; gap:10px;">
-        ${!isConfirmado ? `
-          <button class="btn-confirmar-confronto" onclick="confirmarConfrontoAutomatico(${index})">
-            🔒 Confirmar Confronto
-          </button>
-        ` : `
-          <button class="btn-editar-confronto" onclick="editarConfronto(${index})">
-            ✏️ Editar Confronto
-          </button>
-        `}
-      </div>
-    `;
-    container.appendChild(div);
-  });
-
-  document.getElementById('btnVoltar').style.display = faseAtual === 1 ? 'none' : 'inline-block';
+// Funções de atualização Diretas do Bracket
+function alterarProvedor(fase, matchIndex, provedor) {
+  provedoresConfrontos[`${fase}_${matchIndex}`] = provedor;
   calcularValores();
+  atualizarSpansLiquido(fase, matchIndex);
 }
 
-function alterarProvedorConfronto(index, provedor) {
-  provedoresConfrontos[`${faseAtual}_${index}`] = provedor;
-  calcularValores(); 
-  renderizarValoresLiquidosIndividuais(index);
-}
-
-function salvarGanhoJogador(confrontoIndex, jogadorNome, valor) {
-  const chave = `${faseAtual}_${confrontoIndex}_${jogadorNome}`;
-  ganhosJogadores[chave] = parseFloat(valor) || 0;
+function salvarGanho(fase, matchIndex, nomeJogador, playerNum, valor) {
+  ganhosJogadores[`${fase}_${matchIndex}_${nomeJogador}`] = parseFloat(valor) || 0;
   calcularValores();
-  renderizarValoresLiquidosIndividuais(confrontoIndex);
+  atualizarSpansLiquido(fase, matchIndex);
 }
 
-function renderizarValoresLiquidosIndividuais(index) {
-  const chaveElemento = `${faseAtual}_${index}`;
-  const provSelecionado = provedoresConfrontos[chaveElemento] || "PG";
-  const custoEntrada = provSelecionado === "PG" ? CUSTO_PG_POR_JOGADOR : CUSTO_PRAGMATIC_POR_JOGADOR;
-  const dupla = confrontos[faseAtual][index];
+function atualizarSpansLiquido(fase, matchIndex) {
+  const chave = `${fase}_${matchIndex}`;
+  const dupla = confrontos[fase][matchIndex];
+  const prov = provedoresConfrontos[chave] || "PG";
+  const custo = prov === "PG" ? CUSTO_PG_POR_JOGADOR : CUSTO_PRAGMATIC_POR_JOGADOR;
 
-  dupla.forEach((jogador, jIdx) => {
-    const ganho = ganhosJogadores[`${chaveElemento}_${jogador}`] || 0;
-    const liquido = ganho - custoEntrada;
-    const containerConfrontos = document.getElementById('confrontos').children[index];
-    if(containerConfrontos) {
-      const divBalanco = containerConfrontos.querySelectorAll('.balanco-financeiro')[jIdx];
-      if(divBalanco) {
-        divBalanco.className = `balanco-financeiro ${liquido >= 0 ? 'lucro' : 'prejuizo'}`;
-        divBalanco.textContent = `Líquido: ${liquido >= 0 ? '+' : ''}${liquido.toFixed(2)}`;
-      }
-    }
-  });
+  // Jogador 1
+  const ganho1 = ganhosJogadores[`${chave}_${dupla[0]}`] || 0;
+  const liq1 = ganho1 - custo;
+  const span1 = document.getElementById(`liq_${fase}_${matchIndex}_1`);
+  if (span1) {
+    span1.textContent = `Liq: ${liq1 >= 0 ? '+' : ''}${liq1.toFixed(2)}`;
+    span1.className = `liq-span ${liq1 >= 0 ? 'lucro' : 'prejuizo'}`;
+  }
+
+  // Jogador 2
+  const ganho2 = ganhosJogadores[`${chave}_${dupla[1]}`] || 0;
+  const liq2 = ganho2 - custo;
+  const span2 = document.getElementById(`liq_${fase}_${matchIndex}_2`);
+  if (span2) {
+    span2.textContent = `Liq: ${liq2 >= 0 ? '+' : ''}${liq2.toFixed(2)}`;
+    span2.className = `liq-span ${liq2 >= 0 ? 'lucro' : 'prejuizo'}`;
+  }
 }
 
-function confirmarConfrontoAutomatico(index) {
-  const chaveElemento = `${faseAtual}_${index}`;
-  const dupla = confrontos[faseAtual][index];
+function confirmarMatch(fase, matchIndex) {
+  const chaveElemento = `${fase}_${matchIndex}`;
+  const dupla = confrontos[fase][matchIndex];
 
   const ganhoJ1 = ganhosJogadores[`${chaveElemento}_${dupla[0]}`] || 0;
   const ganhoJ2 = ganhosJogadores[`${chaveElemento}_${dupla[1]}`] || 0;
 
   if (ganhoJ1 === 0 && ganhoJ2 === 0) {
-    if (!confirm("Os dois jogadores estão com valor 0. Deseja confirmar assim mesmo?")) {
-      return;
-    }
+    if (!confirm("Os dois estão zerados. Confirmar empate?")) return;
   }
 
   if (ganhoJ1 > ganhoJ2) {
@@ -308,49 +379,40 @@ function confirmarConfrontoAutomatico(index) {
   } else if (ganhoJ2 > ganhoJ1) {
     vencedoresConfrontos[chaveElemento] = dupla[1];
   } else {
-    const desempate = prompt(`Empate detectado (${ganhoJ1} x ${ganhoJ2}). Quem vence no critério de desempate?\n1 - ${dupla[0]}\n2 - ${dupla[1]}`);
-    if (desempate === "1") {
-      vencedoresConfrontos[chaveElemento] = dupla[0];
-    } else if (desempate === "2") {
-      vencedoresConfrontos[chaveElemento] = dupla[1];
-    } else {
-      alert("Confirmação cancelada. Escolha um vencedor válido para desempatar.");
-      return;
-    }
+    const desempate = prompt(`Empate (${ganhoJ1}x${ganhoJ2}). Quem avança?\n1 - ${dupla[0]}\n2 - ${dupla[1]}`);
+    if (desempate === "1") vencedoresConfrontos[chaveElemento] = dupla[0];
+    else if (desempate === "2") vencedoresConfrontos[chaveElemento] = dupla[1];
+    else return alert("Ação cancelada.");
   }
 
   confrontosConfirmados[chaveElemento] = true;
-  renderizarConfrontos();
-
-  if (confrontos[faseAtual].length === 1) {
-    setTimeout(() => {
-      avancarFase();
-    }, 500); 
-  }
+  renderizarConfrontosBracket();
 }
 
-function editarConfronto(index) {
-  const chaveElemento = `${faseAtual}_${index}`;
-  confrontosConfirmados[chaveElemento] = false;
-  vencedoresConfrontos[chaveElemento] = null;
-  renderizarConfrontos();
+function editarMatch(fase, matchIndex) {
+  confrontosConfirmados[`${fase}_${matchIndex}`] = false;
+  vencedoresConfrontos[`${fase}_${matchIndex}`] = null;
+  renderizarConfrontosBracket();
 }
 
 function avancarFase() {
   const listaAtuais = confrontos[faseAtual];
   const proximosVencedores = [];
 
+  // Checa se todos da fase atual foram confirmados
   for (let i = 0; i < listaAtuais.length; i++) {
     const chave = `${faseAtual}_${i}`;
     if (!confrontosConfirmados[chave]) {
-      alert(`Por favor, clique em "Confirmar Confronto" no Confronto ${i + 1} antes de avançar.`);
+      alert(`O confronto da chave ${i + 1} ainda não foi confirmado!`);
       return;
     }
     proximosVencedores.push(vencedoresConfrontos[chave]);
   }
 
-  if (listaAtuais.length === 1) {
+  if (faseAtual === totalFases) {
+    faseAtual++; 
     finalizarCampeonato(proximosVencedores[0], listaAtuais[0]);
+    renderizarConfrontosBracket();
     return;
   }
 
@@ -360,15 +422,16 @@ function avancarFase() {
     const j1 = proximosVencedores[i];
     const j2 = proximosVencedores[i+1] || "BYE (Avança Direto)";
     confrontos[faseAtual].push([j1, j2]);
+    provedoresConfrontos[`${faseAtual}_${confrontos[faseAtual].length - 1}`] = "PG";
   }
 
-  renderizarConfrontos();
+  renderizarConfrontosBracket();
 }
 
 function voltarFase() {
   if (faseAtual > 1) {
     faseAtual--;
-    renderizarConfrontos();
+    renderizarConfrontosBracket();
   }
 }
 
@@ -417,7 +480,6 @@ function gerarPDF() {
   document.getElementById('pdfParticipantes').innerHTML = participantes.map(p => `• ${p}`).join('<br>');
 
   const elemento = document.getElementById('relatorioPDF');
-  
   elemento.style.display = 'block';
 
   const opt = {
@@ -434,7 +496,7 @@ function gerarPDF() {
 }
 
 // ============================
-// Nova Lógica do Sorteio
+// Lógica do Sorteio
 // ============================
 function toggleBlocoSorteio() {
   const bloco = document.getElementById('blocoSorteio');
@@ -475,7 +537,6 @@ function renderizarListaSorteio() {
   const lista = document.createElement('div');
   lista.className = "lista-sorteados";
   
-  // Puxa a lista atual da caixa de texto para ver quem já foi aprovado
   const textarea = document.getElementById('textareaParticipantes');
   const atuais = textarea.value.split('\n').map(n => n.trim()).filter(n => n !== "");
 
@@ -483,12 +544,10 @@ function renderizarListaSorteio() {
     const item = document.createElement('div');
     item.className = "item-sorteado";
     
-    // Se o nome já estiver na caixa principal da Copa, renderiza como aprovado
     if (atuais.includes(nome)) {
       item.classList.add('sorteado-confirmado');
       item.innerHTML = `<span class="nome-sorteado" style="text-decoration: line-through;">${i + 1}. ${nome}</span> <span style="color:#00ff88; font-weight:bold; font-size:14px;">✅ Confirmado na Copa</span>`;
     } else {
-      // Se não, mostra os botões para aprovar ou remover
       item.innerHTML = `
         <span class="nome-sorteado">${i + 1}. ${nome}</span>
         <div class="acoes-sorteio">
@@ -512,13 +571,11 @@ function confirmarSorteado(nome) {
     return;
   }
 
-  // Adiciona o nome na caixa de participantes da copa
   if (!atuais.includes(nome)) {
     atuais.push(nome);
     textarea.value = atuais.join('\n');
   }
   
-  // Re-renderiza a lista para atualizar visualmente (transformar em card verde confirmado)
   renderizarListaSorteio();
 }
 
@@ -537,6 +594,7 @@ function trocarSorteado(index) {
   renderizarListaSorteio();
 }
 
+// Configurações
 function abrirConfig() { 
   document.getElementById('inputNomeCopa').value = nomeCopa;
   document.getElementById('inputCampeao').value = porcCampeao;
@@ -546,9 +604,7 @@ function abrirConfig() {
   document.getElementById('modalConfig').style.display = 'flex'; 
 }
 
-function fecharConfig() { 
-  document.getElementById('modalConfig').style.display = 'none'; 
-}
+function fecharConfig() { document.getElementById('modalConfig').style.display = 'none'; }
 
 function salvarConfig() { 
   const novoNome = document.getElementById('inputNomeCopa').value;
@@ -567,7 +623,6 @@ function salvarConfig() {
   document.body.style.background = `radial-gradient(circle at top, ${corFundo}, #000000)`;
 
   calcularValores();
-
   alert("Configurações salvas com sucesso!"); 
   fecharConfig(); 
 }

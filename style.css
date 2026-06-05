@@ -10,7 +10,7 @@ body {
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 1300px;
   margin: auto;
 }
 
@@ -61,94 +61,6 @@ button:hover {
   box-shadow: 0 0 12px rgba(212,175,55,0.6);
 }
 
-/* Botões dos Jogadores nos Confrontos */
-.btn-jogador {
-  background: rgba(40, 40, 40, 0.5);
-  border: 2px solid rgba(255, 215, 0, 0.4);
-  border-radius: 10px;
-  padding: 12px;
-  font-size: 16px;
-  color: #fff;
-  transition: all 0.2s ease;
-}
-
-.btn-jogador.vencedor-ativo {
-  background: #00ff88;
-  color: #000;
-  border-color: #00ffcc;
-  box-shadow: 0 0 15px #00ff88;
-  font-weight: bold;
-}
-
-/* Botão de Confirmação e Edição */
-.btn-confirmar-confronto {
-  background: #d4af37;
-  color: #111;
-  border: none;
-  font-size: 14px;
-  padding: 10px 20px;
-  border-radius: 8px;
-  margin-top: 5px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.btn-confirmar-confronto:hover {
-  background: #ffd700;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
-
-.btn-editar-confronto {
-  background: #333;
-  color: #fff;
-  border: 1px solid #555;
-  font-size: 14px;
-  padding: 10px 20px;
-  border-radius: 8px;
-  margin-top: 5px;
-  cursor: pointer;
-}
-
-.btn-editar-confronto:hover {
-  background: #444;
-  border-color: #ffd700;
-}
-
-/* Estilo Especial para o Botão PDF */
-.btn-pdf {
-  background: #0056b3;
-  border-color: #004494;
-}
-
-.btn-pdf:hover {
-  background: #004494;
-  box-shadow: 0 0 12px rgba(0, 86, 179, 0.6);
-}
-
-/* Balanço Financeiro Individual (Líquido) */
-.balanco-financeiro {
-  margin-top: 8px;
-  font-size: 13px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 5px;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.balanco-financeiro.lucro {
-  background: rgba(0, 255, 136, 0.15);
-  color: #00ff88;
-  border: 1px solid rgba(0, 255, 136, 0.3);
-}
-
-.balanco-financeiro.prejuizo {
-  background: rgba(255, 70, 70, 0.15);
-  color: #ff4646;
-  border: 1px solid rgba(255, 70, 70, 0.3);
-}
-
 /* ============================
    Cards de Informações do Topo
 ============================ */
@@ -177,33 +89,231 @@ button:hover {
 }
 
 /* ============================
-   Confrontos
+   ÁRVORE DE CHAVEAMENTO (BRACKET)
 ============================ */
-.confronto {
-  background: rgba(25, 25, 25, 0.7);
+.bracket-wrapper {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
   padding: 20px;
-  margin: 20px 0;
-  border-left: 6px solid #ffd700;
+  gap: 40px;
+  background: rgba(10, 10, 10, 0.5);
+  border-radius: 15px;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+  min-height: 400px;
+}
+
+/* Custom Scrollbar pro Bracket */
+.bracket-wrapper::-webkit-scrollbar { height: 10px; }
+.bracket-wrapper::-webkit-scrollbar-track { background: #111; border-radius: 10px;}
+.bracket-wrapper::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px;}
+
+.bracket-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  min-width: 280px;
+  gap: 20px;
+}
+
+.bracket-col-title {
+  text-align: center;
+  color: #ffd700;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+/* Caixa Padrão do Confronto */
+.bracket-box {
+  background: rgba(30, 30, 30, 0.9);
+  border: 2px solid #555;
   border-radius: 10px;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   transition: all 0.3s ease;
 }
 
-.confronto-confirmado {
-  border-left-color: #00ff88;
-  background: rgba(20, 30, 25, 0.8);
+/* Linha conector pra direita -> */
+.bracket-col:not(:last-child) .bracket-box::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -42px;
+  width: 40px;
+  height: 2px;
+  background-color: #555;
+  z-index: 1;
+}
+
+/* --- Estados das Caixas --- */
+.bracket-box.active {
+  border-color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+  padding: 15px;
+}
+
+.bracket-box.confirmado {
+  border-color: #00ff88;
   box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
 }
 
-.confronto h3 {
-  margin-top: 0;
-  color: #ffd700;
-  text-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
+.bracket-box.locked {
+  padding: 10px;
+  border-color: #333;
 }
 
+.bracket-box.future {
+  padding: 20px 10px;
+  border-color: #222;
+  background: rgba(20,20,20,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bracket-box.champion-box {
+  border-color: #ffd700;
+  box-shadow: 0 0 25px rgba(255,215,0,0.5);
+  padding: 20px;
+  text-align: center;
+}
+
+/* ============================
+   EFEITOS DE VITÓRIA E DERROTA
+============================ */
+.winner-highlight {
+  border-color: #ffd700 !important;
+  background: rgba(255, 215, 0, 0.1) !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+  transform: scale(1.03);
+  z-index: 2;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.loser-fade {
+  opacity: 0.3;
+  filter: grayscale(100%);
+  transform: scale(0.95);
+  pointer-events: none; /* Bloqueia cliques no lado perdedor pra evitar bugs */
+  transition: all 0.3s ease;
+}
+
+/* Aplicação na fase trancada (histórico) */
+.player-locked.winner-highlight {
+  color: #ffd700;
+  font-weight: bold;
+  border: 1px solid #ffd700;
+  border-radius: 8px;
+}
+
+/* Cor da coroa e do texto */
+.player-name.crown {
+  color: #ffd700;
+  font-size: 16px;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+/* --- Elementos Internos da Caixa Ativa --- */
+.bracket-header select {
+  width: 100%;
+  padding: 6px;
+  font-size: 13px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  background: #111;
+}
+
+.player-input-box {
+  background: rgba(0,0,0,0.3);
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  transition: all 0.3s ease;
+}
+
+.player-name {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.3s ease;
+}
+
+.player-data {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.player-data input {
+  width: 80px;
+  padding: 4px;
+  font-size: 12px;
+  margin: 0;
+}
+
+.liq-span {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.liq-span.lucro { background: rgba(0,255,136,0.2); color: #00ff88; }
+.liq-span.prejuizo { background: rgba(255,70,70,0.2); color: #ff4646; }
+
+.vs-divider {
+  text-align: center;
+  font-size: 12px;
+  color: #777;
+  margin: 5px 0;
+  font-weight: bold;
+}
+
+.bracket-footer {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.btn-conf { background: #d4af37; color: #000; padding: 6px 12px; font-size: 12px; border: none; }
+.btn-conf:hover { background: #ffd700; }
+.btn-edit { background: #333; color: #fff; padding: 6px 12px; font-size: 12px; border: 1px solid #555; }
+.btn-edit:hover { background: #444; border-color: #ffd700; }
+
+/* --- Elementos Internos da Caixa Trancada (Histórico) --- */
+.player-locked {
+  padding: 8px;
+  border-bottom: 1px solid #333;
+  color: #888;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.3s ease;
+}
+.player-locked:last-child { border-bottom: none; }
+
+/* Botoes de Avançar Fase */
 .botoes-fase {
   text-align: center;
   margin-top: 30px;
+}
+.btn-destaque {
+  background: #00ff88;
+  color: #000;
+  border-color: #00cc6a;
+}
+.btn-destaque:hover {
+  background: #00cc6a;
+  box-shadow: 0 0 15px rgba(0,255,136,0.6);
 }
 
 /* ============================
@@ -244,6 +354,9 @@ button:hover {
   to { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ffcc; }
 }
 
+.btn-pdf { background: #0056b3; border-color: #004494; }
+.btn-pdf:hover { background: #004494; box-shadow: 0 0 12px rgba(0, 86, 179, 0.6); }
+
 /* ============================
    Estilos do Relatório PDF (Oculto)
 ============================ */
@@ -254,22 +367,9 @@ button:hover {
   color: #333333;
   font-family: Arial, sans-serif;
 }
-
-.pdf-container h1 {
-  text-align: center;
-  color: #111;
-  text-transform: uppercase;
-  text-shadow: none;
-}
-
-.pdf-container hr {
-  border: 1px solid #cccccc;
-  margin-bottom: 20px;
-}
-
-.pdf-section {
-  margin-bottom: 30px;
-}
+.pdf-container h1 { text-align: center; color: #111; text-transform: uppercase; text-shadow: none; }
+.pdf-container hr { border: 1px solid #cccccc; margin-bottom: 20px; }
+.pdf-section { margin-bottom: 30px; }
 
 /* ============================
    Modais
@@ -299,7 +399,7 @@ button:hover {
 }
 
 /* ============================
-   Novo Bloco de Sorteio (Lista)
+   Bloco Sorteio (Lista)
 ============================ */
 .lista-sorteados {
   display: flex;
@@ -310,18 +410,9 @@ button:hover {
   overflow-y: auto;
   padding-right: 5px;
 }
-
-.lista-sorteados::-webkit-scrollbar {
-  width: 6px;
-}
-.lista-sorteados::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
-}
-.lista-sorteados::-webkit-scrollbar-thumb {
-  background: #ffd700;
-  border-radius: 10px;
-}
+.lista-sorteados::-webkit-scrollbar { width: 6px; }
+.lista-sorteados::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); border-radius: 10px; }
+.lista-sorteados::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; }
 
 .item-sorteado {
   display: flex;
@@ -333,51 +424,16 @@ button:hover {
   border-radius: 8px;
   transition: all 0.3s ease;
 }
-
 .sorteado-confirmado {
   border-left-color: #00ff88;
   background: rgba(20, 50, 30, 0.9);
   opacity: 0.8;
 }
+.nome-sorteado { font-weight: bold; font-size: 16px; color: #fff; }
+.acoes-sorteio { display: flex; gap: 8px; }
 
-.nome-sorteado {
-  font-weight: bold;
-  font-size: 16px;
-  color: #fff;
-}
-
-.acoes-sorteio {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-acao-sorteio {
-  margin-top: 0;
-  padding: 6px 12px;
-  border-radius: 5px;
-  font-size: 14px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-ok {
-  background-color: rgba(0, 255, 136, 0.2);
-  border: 1px solid #00ff88;
-  color: #fff;
-}
-
-.btn-ok:hover {
-  background-color: #00ff88;
-  color: #000;
-}
-
-.btn-x {
-  background-color: rgba(255, 70, 70, 0.2);
-  border: 1px solid #ff4646;
-  color: #fff;
-}
-
-.btn-x:hover {
-  background-color: #ff4646;
-}
+.btn-acao-sorteio { margin-top: 0; padding: 6px 12px; border-radius: 5px; font-size: 14px; border: none; cursor: pointer; transition: all 0.2s ease; }
+.btn-ok { background-color: rgba(0, 255, 136, 0.2); border: 1px solid #00ff88; color: #fff; }
+.btn-ok:hover { background-color: #00ff88; color: #000; }
+.btn-x { background-color: rgba(255, 70, 70, 0.2); border: 1px solid #ff4646; color: #fff; }
+.btn-x:hover { background-color: #ff4646; }
