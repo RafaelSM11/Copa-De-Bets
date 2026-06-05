@@ -17,6 +17,7 @@ let totalFases = 1;
 
 let nomesSorteadosState = [];
 let nomesReservaState = [];
+let isSorteando = false; 
 
 // ============================
 // Configurações padrão
@@ -50,7 +51,6 @@ function carregarProgresso() {
   if (saved) {
     const estado = JSON.parse(saved);
     
-    // Restaura as variáveis
     participantes = estado.participantes || [];
     valorEntrada = estado.valorEntrada || 50.00;
     faseAtual = estado.faseAtual || 1;
@@ -62,7 +62,6 @@ function carregarProgresso() {
     qtdParticipantes = estado.qtdParticipantes || 16;
     totalFases = estado.totalFases || 1;
 
-    // Restaura Configurações
     if (estado.config) {
       nomeCopa = estado.config.nomeCopa || nomeCopa;
       porcCampeao = estado.config.porcCampeao || 55;
@@ -76,21 +75,18 @@ function carregarProgresso() {
       document.body.style.background = `radial-gradient(circle at top, ${estado.corFundo || "#000000"}, #000000)`;
     }
 
-    // Restaura as caixas da tela inicial
     document.getElementById('valorEntrada').value = valorEntrada;
     document.getElementById('qtdParticipantes').value = qtdParticipantes;
     document.getElementById('textareaParticipantes').value = estado.textareaText || "";
 
-    calcularValores(); // Refaz as contas financeiras
+    calcularValores();
 
-    // Se a copa já tinha começado, pula a tela inicial
     if (estado.copaIniciada) {
       document.getElementById('setup').style.display = 'none';
       document.getElementById('blocoSorteio').style.display = 'none';
       document.getElementById('copa').style.display = 'block';
       renderizarConfrontosBracket();
       
-      // Se a copa já tiver acabado quando atualizou a página, restaura a tela final
       if (faseAtual > totalFases) {
         const campeao = vencedoresConfrontos[`${totalFases}_0`];
         const duplaFinal = confrontos[totalFases][0];
@@ -98,13 +94,11 @@ function carregarProgresso() {
       }
     }
   } else {
-    // Se não tem salvamento, inicia normalmente
     atualizarValoresGerais();
     atualizarQuantidadeParticipantes();
   }
 }
 
-// Botão que limpa a memória e reseta tudo
 function reiniciarCopaConfirmar() {
   if(confirm("Tem certeza que deseja apagar a copa atual e criar uma do zero? Todo o progresso não salvo será perdido!")) {
     localStorage.removeItem('FellCup_EstadoSalvo');
@@ -141,7 +135,6 @@ function atualizarValoresGerais() {
   salvarProgresso();
 }
 
-// A banca soma APENAS O LÍQUIDO de cada jogador
 function calcularValores() {
   const bancaInicial = qtdParticipantes * valorEntrada;
   let somaLiquido = 0;
@@ -224,7 +217,6 @@ function iniciarCopa() {
     provedoresConfrontos[`1_${confrontos[1].length - 1}`] = "PG";
   }
 
-  // Calcula total de Fases
   let tempMatches = confrontos[1].length;
   totalFases = 1;
   while(tempMatches > 1) {
@@ -250,9 +242,6 @@ function getNomeFase(faseNum, total) {
   return `Fase ${faseNum}`;
 }
 
-// ============================
-// Renderização do Chaveamento (Bracket)
-// ============================
 function renderizarConfrontosBracket() {
   const wrapper = document.getElementById('confrontos');
   wrapper.innerHTML = "";
@@ -279,7 +268,6 @@ function renderizarConfrontosBracket() {
     for (let m = 0; m < matchesInPhase; m++) {
       const matchDiv = document.createElement('div');
       
-      // Fase Passada
       if (f < faseAtual) {
         const dupla = confrontos[f][m];
         const vencedor = vencedoresConfrontos[`${f}_${m}`];
@@ -305,7 +293,6 @@ function renderizarConfrontosBracket() {
           <div class="${p2Class}">${p2Name}</div>
         `;
       } 
-      // Fase Atual
       else if (f === faseAtual) {
         const dupla = confrontos[f][m];
         const chaveElemento = `${f}_${m}`;
@@ -380,7 +367,6 @@ function renderizarConfrontosBracket() {
           </div>
         `;
       } 
-      // Fase Futura
       else {
         matchDiv.className = 'bracket-box future';
         matchDiv.innerHTML = `
@@ -395,7 +381,6 @@ function renderizarConfrontosBracket() {
     matchesInPhase = Math.ceil(matchesInPhase / 2);
   }
 
-  // Coluna do Campeão
   if (faseAtual > totalFases) {
     const colDiv = document.createElement('div');
     colDiv.className = 'bracket-col';
@@ -408,7 +393,6 @@ function renderizarConfrontosBracket() {
   }
 }
 
-// Funções de atualização
 function alterarProvedor(fase, matchIndex, provedor) {
   provedoresConfrontos[`${fase}_${matchIndex}`] = provedor;
   calcularValores();
@@ -544,9 +528,6 @@ function finalizarCampeonato(campeao, duplaFinal) {
   document.getElementById('cardFinal').style.display = 'flex';
 }
 
-// ============================
-// Geração do PDF
-// ============================
 function gerarPDF() {
   document.getElementById('pdfTitulo').textContent = nomeCopa;
   
@@ -583,7 +564,7 @@ function gerarPDF() {
 }
 
 // ============================
-// Lógica do Sorteio
+// Lógica do Sorteio (Efeito Cartas Virando - Card Flip)
 // ============================
 function toggleBlocoSorteio() {
   const bloco = document.getElementById('blocoSorteio');
@@ -591,6 +572,8 @@ function toggleBlocoSorteio() {
 }
 
 function sortearParticipantes() {
+  if (isSorteando) return; // Bloqueia clicks duplos
+
   const nomes = document.getElementById('textareaSortear').value
     .split('\n')
     .map(n => n.trim())
@@ -601,12 +584,64 @@ function sortearParticipantes() {
   const qtd = parseInt(document.getElementById('qtdSortear').value) || 1;
   if (qtd > nomes.length) { alert("A quantidade a sortear não pode ser maior que o número de nomes disponíveis."); return; }
 
+  isSorteando = true;
+  document.getElementById('btnSorteio').disabled = true;
+
   const embaralhados = embaralhar(nomes.slice());
   
-  nomesSorteadosState = embaralhados.slice(0, qtd);
+  const sorteadosFinais = embaralhados.slice(0, qtd);
   nomesReservaState = embaralhados.slice(qtd);
+  nomesSorteadosState = []; 
   
-  renderizarListaSorteio();
+  document.getElementById('resultadoSorteio').innerHTML = "";
+  
+  // Prepara as cartas na mesa
+  const cardsContainer = document.getElementById('cardsContainer');
+  cardsContainer.style.display = 'flex';
+  cardsContainer.innerHTML = "";
+
+  sorteadosFinais.forEach((nome, i) => {
+    const card = document.createElement('div');
+    card.className = 'flip-card';
+    card.id = `carta-${i}`;
+    card.innerHTML = `
+      <div class="flip-card-inner">
+        <div class="flip-card-front">🃏</div>
+        <div class="flip-card-back">${nome}</div>
+      </div>
+    `;
+    cardsContainer.appendChild(card);
+  });
+
+  // Dá um tempinho pra galera ver as cartas na mesa e começa o show
+  setTimeout(() => {
+    animarCartasSorteio(sorteadosFinais, 0);
+  }, 800);
+}
+
+function animarCartasSorteio(sorteadosFinais, indexAtual) {
+  if (indexAtual >= sorteadosFinais.length) {
+     isSorteando = false;
+     document.getElementById('btnSorteio').disabled = false;
+     return;
+  }
+
+  const card = document.getElementById(`carta-${indexAtual}`);
+  const alvoNome = sorteadosFinais[indexAtual];
+  
+  // Dá o comando CSS para virar a carta 3D
+  card.classList.add('flipped');
+
+  // Espera a carta terminar de virar (0.6s) pra jogar o nome na lista
+  setTimeout(() => {
+      nomesSorteadosState.push(alvoNome);
+      renderizarListaSorteio();
+      
+      // Espera mais um pouquinho de suspense e vira a próxima carta
+      setTimeout(() => {
+        animarCartasSorteio(sorteadosFinais, indexAtual + 1);
+      }, 700); 
+  }, 600); 
 }
 
 function renderizarListaSorteio() {
