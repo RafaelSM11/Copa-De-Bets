@@ -198,7 +198,7 @@ button:hover {
   opacity: 0.3;
   filter: grayscale(100%);
   transform: scale(0.95);
-  pointer-events: none; /* Bloqueia cliques no lado perdedor pra evitar bugs */
+  pointer-events: none; 
   transition: all 0.3s ease;
 }
 
@@ -301,11 +301,15 @@ button:hover {
 }
 .player-locked:last-child { border-bottom: none; }
 
-/* Botoes de Avançar Fase */
+/* Botões da Copa */
 .botoes-fase {
   text-align: center;
   margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
 }
+
 .btn-destaque {
   background: #00ff88;
   color: #000;
@@ -314,6 +318,17 @@ button:hover {
 .btn-destaque:hover {
   background: #00cc6a;
   box-shadow: 0 0 15px rgba(0,255,136,0.6);
+}
+
+.btn-perigo {
+  background: #8b0000;
+  color: #fff;
+  border-color: #ff4d4d;
+}
+.btn-perigo:hover {
+  background: #ff4d4d;
+  color: #000;
+  box-shadow: 0 0 15px rgba(255, 77, 77, 0.6);
 }
 
 /* ============================

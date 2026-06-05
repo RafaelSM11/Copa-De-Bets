@@ -2,7 +2,7 @@
 // Variáveis Globais
 // ============================
 let participantes = [];
-let valorEntrada = 50.00; // Valor padrão de entrada na banca
+let valorEntrada = 50.00;
 let totalBanca = 0;
 let faseAtual = 1; 
 let confrontos = []; // Array 2D: confrontos[fase][index_match] = [Jog1, Jog2]
@@ -13,7 +13,7 @@ let ganhosJogadores = {};
 let maiorGanho = 0;
 let jogadorMaiorForrada = "";
 let qtdParticipantes = 16;
-let totalFases = 1; // Calculado no início
+let totalFases = 1;
 
 let nomesSorteadosState = [];
 let nomesReservaState = [];
@@ -29,6 +29,88 @@ let porcOrganizador = 20;
 
 const CUSTO_PG_POR_JOGADOR = 30.00;
 const CUSTO_PRAGMATIC_POR_JOGADOR = 40.00;
+
+// ============================
+// Funções de Salvamento de Progresso (Local Storage)
+// ============================
+function salvarProgresso() {
+  const estado = {
+    participantes, valorEntrada, faseAtual, confrontos, provedoresConfrontos,
+    vencedoresConfrontos, confrontosConfirmados, ganhosJogadores, qtdParticipantes, totalFases,
+    textareaText: document.getElementById('textareaParticipantes').value,
+    config: { nomeCopa, porcCampeao, porcVice, porcMaiorForrada, porcOrganizador },
+    corFundo: document.getElementById('inputCorFundo').value,
+    copaIniciada: document.getElementById('copa').style.display === 'block'
+  };
+  localStorage.setItem('FellCup_EstadoSalvo', JSON.stringify(estado));
+}
+
+function carregarProgresso() {
+  const saved = localStorage.getItem('FellCup_EstadoSalvo');
+  if (saved) {
+    const estado = JSON.parse(saved);
+    
+    // Restaura as variáveis
+    participantes = estado.participantes || [];
+    valorEntrada = estado.valorEntrada || 50.00;
+    faseAtual = estado.faseAtual || 1;
+    confrontos = estado.confrontos || [];
+    provedoresConfrontos = estado.provedoresConfrontos || {};
+    vencedoresConfrontos = estado.vencedoresConfrontos || {};
+    confrontosConfirmados = estado.confrontosConfirmados || {};
+    ganhosJogadores = estado.ganhosJogadores || {};
+    qtdParticipantes = estado.qtdParticipantes || 16;
+    totalFases = estado.totalFases || 1;
+
+    // Restaura Configurações
+    if (estado.config) {
+      nomeCopa = estado.config.nomeCopa || nomeCopa;
+      porcCampeao = estado.config.porcCampeao || 55;
+      porcVice = estado.config.porcVice || 15;
+      porcMaiorForrada = estado.config.porcMaiorForrada || 10;
+      porcOrganizador = estado.config.porcOrganizador || 20;
+
+      document.getElementById('tituloCopa').textContent = nomeCopa;
+      document.title = nomeCopa;
+      document.getElementById('inputCorFundo').value = estado.corFundo || "#000000";
+      document.body.style.background = `radial-gradient(circle at top, ${estado.corFundo || "#000000"}, #000000)`;
+    }
+
+    // Restaura as caixas da tela inicial
+    document.getElementById('valorEntrada').value = valorEntrada;
+    document.getElementById('qtdParticipantes').value = qtdParticipantes;
+    document.getElementById('textareaParticipantes').value = estado.textareaText || "";
+
+    calcularValores(); // Refaz as contas financeiras
+
+    // Se a copa já tinha começado, pula a tela inicial
+    if (estado.copaIniciada) {
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('blocoSorteio').style.display = 'none';
+      document.getElementById('copa').style.display = 'block';
+      renderizarConfrontosBracket();
+      
+      // Se a copa já tiver acabado quando atualizou a página, restaura a tela final
+      if (faseAtual > totalFases) {
+        const campeao = vencedoresConfrontos[`${totalFases}_0`];
+        const duplaFinal = confrontos[totalFases][0];
+        if (campeao && duplaFinal) finalizarCampeonato(campeao, duplaFinal);
+      }
+    }
+  } else {
+    // Se não tem salvamento, inicia normalmente
+    atualizarValoresGerais();
+    atualizarQuantidadeParticipantes();
+  }
+}
+
+// Botão que limpa a memória e reseta tudo
+function reiniciarCopaConfirmar() {
+  if(confirm("Tem certeza que deseja apagar a copa atual e criar uma do zero? Todo o progresso não salvo será perdido!")) {
+    localStorage.removeItem('FellCup_EstadoSalvo');
+    location.reload();
+  }
+}
 
 // ============================
 // Funções auxiliares
@@ -56,8 +138,10 @@ function atualizarValoresGerais() {
     valorEntrada = parseFloat(inputEntrada.value) || 0;
   }
   calcularValores();
+  salvarProgresso();
 }
 
+// A banca soma APENAS O LÍQUIDO de cada jogador
 function calcularValores() {
   const bancaInicial = qtdParticipantes * valorEntrada;
   let somaLiquido = 0;
@@ -140,7 +224,7 @@ function iniciarCopa() {
     provedoresConfrontos[`1_${confrontos[1].length - 1}`] = "PG";
   }
 
-  // Calcula total de Fases para desenhar a árvore completa
+  // Calcula total de Fases
   let tempMatches = confrontos[1].length;
   totalFases = 1;
   while(tempMatches > 1) {
@@ -154,6 +238,7 @@ function iniciarCopa() {
   document.getElementById('copa').style.display = 'block';
 
   renderizarConfrontosBracket();
+  salvarProgresso();
 }
 
 function getNomeFase(faseNum, total) {
@@ -194,7 +279,7 @@ function renderizarConfrontosBracket() {
     for (let m = 0; m < matchesInPhase; m++) {
       const matchDiv = document.createElement('div');
       
-      // Se a fase for PASSADA (Já resolvida)
+      // Fase Passada
       if (f < faseAtual) {
         const dupla = confrontos[f][m];
         const vencedor = vencedoresConfrontos[`${f}_${m}`];
@@ -205,7 +290,6 @@ function renderizarConfrontosBracket() {
         let p1Name = dupla[0];
         let p2Name = dupla[1];
 
-        // Aplica Fade-out e Coroa de acordo com o vencedor
         if (vencedor === dupla[0]) {
             p1Class += " winner-highlight";
             p2Class += " loser-fade";
@@ -221,7 +305,7 @@ function renderizarConfrontosBracket() {
           <div class="${p2Class}">${p2Name}</div>
         `;
       } 
-      // Se a fase for ATUAL (Aguardando inputs)
+      // Fase Atual
       else if (f === faseAtual) {
         const dupla = confrontos[f][m];
         const chaveElemento = `${f}_${m}`;
@@ -245,7 +329,6 @@ function renderizarConfrontosBracket() {
         let p1NameClass = "player-name";
         let p2NameClass = "player-name";
 
-        // Aplica o Fade-out e a Coroa dinamicamente na fase atual confirmada
         if (isConfirmado) {
             if (vencedorAtual === dupla[0]) {
                 p1BoxClass += " winner-highlight";
@@ -297,7 +380,7 @@ function renderizarConfrontosBracket() {
           </div>
         `;
       } 
-      // Se a fase for FUTURA (Ainda não existem jogadores definidos)
+      // Fase Futura
       else {
         matchDiv.className = 'bracket-box future';
         matchDiv.innerHTML = `
@@ -312,7 +395,7 @@ function renderizarConfrontosBracket() {
     matchesInPhase = Math.ceil(matchesInPhase / 2);
   }
 
-  // Coluna do Campeão (Última Coluna)
+  // Coluna do Campeão
   if (faseAtual > totalFases) {
     const colDiv = document.createElement('div');
     colDiv.className = 'bracket-col';
@@ -325,17 +408,19 @@ function renderizarConfrontosBracket() {
   }
 }
 
-// Funções de atualização Diretas do Bracket
+// Funções de atualização
 function alterarProvedor(fase, matchIndex, provedor) {
   provedoresConfrontos[`${fase}_${matchIndex}`] = provedor;
   calcularValores();
   atualizarSpansLiquido(fase, matchIndex);
+  salvarProgresso();
 }
 
 function salvarGanho(fase, matchIndex, nomeJogador, playerNum, valor) {
   ganhosJogadores[`${fase}_${matchIndex}_${nomeJogador}`] = parseFloat(valor) || 0;
   calcularValores();
   atualizarSpansLiquido(fase, matchIndex);
+  salvarProgresso();
 }
 
 function atualizarSpansLiquido(fase, matchIndex) {
@@ -344,7 +429,6 @@ function atualizarSpansLiquido(fase, matchIndex) {
   const prov = provedoresConfrontos[chave] || "PG";
   const custo = prov === "PG" ? CUSTO_PG_POR_JOGADOR : CUSTO_PRAGMATIC_POR_JOGADOR;
 
-  // Jogador 1
   const ganho1 = ganhosJogadores[`${chave}_${dupla[0]}`] || 0;
   const liq1 = ganho1 - custo;
   const span1 = document.getElementById(`liq_${fase}_${matchIndex}_1`);
@@ -353,7 +437,6 @@ function atualizarSpansLiquido(fase, matchIndex) {
     span1.className = `liq-span ${liq1 >= 0 ? 'lucro' : 'prejuizo'}`;
   }
 
-  // Jogador 2
   const ganho2 = ganhosJogadores[`${chave}_${dupla[1]}`] || 0;
   const liq2 = ganho2 - custo;
   const span2 = document.getElementById(`liq_${fase}_${matchIndex}_2`);
@@ -387,19 +470,20 @@ function confirmarMatch(fase, matchIndex) {
 
   confrontosConfirmados[chaveElemento] = true;
   renderizarConfrontosBracket();
+  salvarProgresso();
 }
 
 function editarMatch(fase, matchIndex) {
   confrontosConfirmados[`${fase}_${matchIndex}`] = false;
   vencedoresConfrontos[`${fase}_${matchIndex}`] = null;
   renderizarConfrontosBracket();
+  salvarProgresso();
 }
 
 function avancarFase() {
   const listaAtuais = confrontos[faseAtual];
   const proximosVencedores = [];
 
-  // Checa se todos da fase atual foram confirmados
   for (let i = 0; i < listaAtuais.length; i++) {
     const chave = `${faseAtual}_${i}`;
     if (!confrontosConfirmados[chave]) {
@@ -413,6 +497,7 @@ function avancarFase() {
     faseAtual++; 
     finalizarCampeonato(proximosVencedores[0], listaAtuais[0]);
     renderizarConfrontosBracket();
+    salvarProgresso();
     return;
   }
 
@@ -426,12 +511,14 @@ function avancarFase() {
   }
 
   renderizarConfrontosBracket();
+  salvarProgresso();
 }
 
 function voltarFase() {
   if (faseAtual > 1) {
     faseAtual--;
     renderizarConfrontosBracket();
+    salvarProgresso();
   }
 }
 
@@ -574,6 +661,7 @@ function confirmarSorteado(nome) {
   if (!atuais.includes(nome)) {
     atuais.push(nome);
     textarea.value = atuais.join('\n');
+    salvarProgresso();
   }
   
   renderizarListaSorteio();
@@ -623,6 +711,8 @@ function salvarConfig() {
   document.body.style.background = `radial-gradient(circle at top, ${corFundo}, #000000)`;
 
   calcularValores();
+  salvarProgresso();
+  
   alert("Configurações salvas com sucesso!"); 
   fecharConfig(); 
 }
@@ -632,9 +722,8 @@ function fecharUltimasCopas() { document.getElementById('modalUltimasCopas').sty
 function abrirRanking() { document.getElementById('modalRanking').style.display = 'flex'; }
 function fecharRanking() { document.getElementById('modalRanking').style.display = 'none'; }
 function fecharCardFinal() { document.getElementById('cardFinal').style.display = 'none'; }
-function reiniciarCopa() { location.reload(); }
 
+// Inicia chamando o Load
 window.onload = () => {
-  atualizarValoresGerais();
-  atualizarQuantidadeParticipantes();
+  carregarProgresso();
 };
