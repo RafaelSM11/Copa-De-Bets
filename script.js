@@ -32,6 +32,7 @@ let porcMaiorForrada = 10;
 let porcOrganizador = 20;
 let somAtivo = true;
 let temaAtual = "padrao";
+let limiarMegaForrada = 500; // NOVO: Gatilho da Animação
 
 let jogosPG = [];
 let jogosPragmatic = [];
@@ -82,7 +83,6 @@ function tocarSom(tipo) {
     osc.start(now); osc.stop(now + 1.2);
   }
   else if (tipo === 'vs') {
-    // Efeito de suspense dramático
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(150, now);
     osc.frequency.exponentialRampToValueAtTime(30, now + 1.5);
@@ -91,6 +91,70 @@ function tocarSom(tipo) {
     osc.start(now); osc.stop(now + 1.5);
   }
 }
+
+// SONS ESPECIAIS (SOUNDBOARD)
+window.tocarEfeito = function(efeito) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+
+  if (efeito === 'gongo') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 2);
+    gain.gain.setValueAtTime(1, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 2);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 2);
+  }
+  else if (efeito === 'cash') {
+    for(let i=0; i<4; i++) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(800 + (i*400), now + (i*0.08));
+      gain.gain.setValueAtTime(0.3, now + (i*0.08));
+      gain.gain.exponentialRampToValueAtTime(0.01, now + (i*0.08) + 0.1);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now + (i*0.08)); osc.stop(now + (i*0.08) + 0.1);
+    }
+  }
+  else if (efeito === 'airhorn') {
+    [150, 154, 158].forEach(freq => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.8);
+    });
+  }
+  else if (efeito === 'cheer') {
+    const bufferSize = audioCtx.sampleRate * 2;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(400, now);
+    filter.frequency.linearRampToValueAtTime(2000, now + 1);
+    
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.linearRampToValueAtTime(0.8, now + 1);
+    gain.gain.linearRampToValueAtTime(0, now + 2);
+    
+    noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+    noise.start(now);
+  }
+};
 
 // ============================
 // Histórico Global (Hall da Fama)
@@ -191,7 +255,7 @@ function salvarProgresso() {
     participantes, valorEntrada, faseAtual, confrontos, provedoresConfrontos,
     vencedoresConfrontos, confrontosConfirmados, ganhosJogadores, qtdParticipantes, totalFases,
     textareaText: document.getElementById('textareaParticipantes').value,
-    config: { nomeCopa, porcCampeao, porcVice, porcMaiorForrada, porcOrganizador, somAtivo, temaAtual, jogosPG, jogosPragmatic },
+    config: { nomeCopa, porcCampeao, porcVice, porcMaiorForrada, porcOrganizador, somAtivo, temaAtual, jogosPG, jogosPragmatic, limiarMegaForrada },
     copaIniciada: document.getElementById('copa').style.display === 'block',
     estatisticasComputadas: estatisticasComputadas
   };
@@ -225,6 +289,7 @@ function carregarProgresso() {
       temaAtual = estado.config.temaAtual || "padrao";
       jogosPG = estado.config.jogosPG || [];
       jogosPragmatic = estado.config.jogosPragmatic || [];
+      limiarMegaForrada = estado.config.limiarMegaForrada !== undefined ? estado.config.limiarMegaForrada : 500;
 
       document.getElementById('tituloCopa').textContent = nomeCopa;
       document.title = nomeCopa;
@@ -496,10 +561,11 @@ function renderizarConfrontosBracket() {
         const liquidoJ1 = ganhoJ1 - custoEntrada;
         const liquidoJ2 = ganhoJ2 - custoEntrada;
 
-        matchDiv.className = `bracket-box active ${isConfirmado ? 'confirmado' : ''}`;
+        // Classes de Mega Forrada ativadas apenas após confirmação do JS
+        let p1BoxClass = `player-input-box ${liquidoJ1 >= limiarMegaForrada ? 'mega-box' : ''}`;
+        let p2BoxClass = `player-input-box ${liquidoJ2 >= limiarMegaForrada ? 'mega-box' : ''}`;
         
-        let p1BoxClass = "player-input-box";
-        let p2BoxClass = "player-input-box";
+        matchDiv.className = `bracket-box active ${isConfirmado ? 'confirmado' : ''}`;
         
         let p1Name = getBadges(dupla[0]);
         let p2Name = getBadges(dupla[1]);
@@ -531,7 +597,7 @@ function renderizarConfrontosBracket() {
             <button class="btn-roleta" onclick="abrirRoleta(${f}, ${m})" title="Sortear Jogo" ${isConfirmado ? 'disabled' : ''}>🎰</button>
           </div>
           
-          <div class="${p1BoxClass}">
+          <div class="${p1BoxClass}" id="box_${f}_${m}_1">
             <div class="${p1NameClass}">${p1Name}</div>
             <div class="player-data">
               <input type="number" step="0.01" placeholder="R$ Ganho" value="${ganhoJ1 || ''}" 
@@ -542,7 +608,7 @@ function renderizarConfrontosBracket() {
 
           <div class="vs-divider">VS</div>
 
-          <div class="${p2BoxClass}">
+          <div class="${p2BoxClass}" id="box_${f}_${m}_2">
             <div class="${p2NameClass}">${p2Name}</div>
             <div class="player-data">
               <input type="number" step="0.01" placeholder="R$ Ganho" value="${ganhoJ2 || ''}" 
@@ -613,6 +679,7 @@ function atualizarSpansLiquido(fase, matchIndex) {
   if (span1) {
     span1.textContent = `Liq: ${liq1 >= 0 ? '+' : ''}${liq1.toFixed(2)}`;
     span1.className = `liq-span ${liq1 >= 0 ? 'lucro' : 'prejuizo'}`;
+    verificarMegaForrada(liq1, document.getElementById(`box_${fase}_${matchIndex}_1`));
   }
 
   const ganho2 = ganhosJogadores[`${chave}_${dupla[1]}`] || 0;
@@ -621,7 +688,32 @@ function atualizarSpansLiquido(fase, matchIndex) {
   if (span2) {
     span2.textContent = `Liq: ${liq2 >= 0 ? '+' : ''}${liq2.toFixed(2)}`;
     span2.className = `liq-span ${liq2 >= 0 ? 'lucro' : 'prejuizo'}`;
+    verificarMegaForrada(liq2, document.getElementById(`box_${fase}_${matchIndex}_2`));
   }
+}
+
+// LÓGICA DE AVALIAÇÃO DA MEGA FORRADA
+function verificarMegaForrada(liquido, elementoCaixa) {
+  if(!elementoCaixa) return;
+  
+  if (liquido >= limiarMegaForrada) {
+     elementoCaixa.classList.add('mega-box');
+     // Verifica se já notificou para não ficar apitando a cada número digitado
+     if(elementoCaixa.dataset.megaNotified !== "true") {
+         dispararAlertaMegaForrada();
+         elementoCaixa.dataset.megaNotified = "true";
+     }
+  } else {
+     elementoCaixa.classList.remove('mega-box');
+     elementoCaixa.dataset.megaNotified = "false";
+  }
+}
+
+function dispararAlertaMegaForrada() {
+  const alerta = document.getElementById('alertaMegaForrada');
+  alerta.style.display = 'flex';
+  window.tocarEfeito('cash');
+  setTimeout(() => { alerta.style.display = 'none'; }, 2500);
 }
 
 function confirmarMatch(fase, matchIndex) {
@@ -937,6 +1029,7 @@ function abrirConfig() {
   
   document.getElementById('inputSom').value = somAtivo ? "true" : "false";
   document.getElementById('inputTema').value = temaAtual;
+  document.getElementById('inputLimiarMega').value = limiarMegaForrada; // Carrega limiar
   
   document.getElementById('inputJogosPG').value = jogosPG.join('\n');
   document.getElementById('inputJogosPragmatic').value = jogosPragmatic.join('\n');
@@ -958,6 +1051,7 @@ function salvarConfig() {
   porcVice = parseFloat(document.getElementById('inputVice').value) || porcVice;
   porcMaiorForrada = parseFloat(document.getElementById('inputMaiorForrada').value) || porcMaiorForrada;
   porcOrganizador = parseFloat(document.getElementById('inputOrganizador').value) || porcOrganizador;
+  limiarMegaForrada = parseFloat(document.getElementById('inputLimiarMega').value) || 500;
   
   somAtivo = document.getElementById('inputSom').value === "true";
   temaAtual = document.getElementById('inputTema').value;
@@ -1121,7 +1215,7 @@ function girarRoleta() {
 
 function fecharCardFinal() { document.getElementById('cardFinal').style.display = 'none'; }
 
-// Expõe a nova função de VS para o HTML
+// Expõe funções pro HTML
 window.mostrarCaraACara = mostrarCaraACara;
 
 // Inicia chamando o Load

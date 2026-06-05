@@ -7,6 +7,23 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body data-theme="padrao">
+
+  <!-- Painel Lateral de Soundboard (Efeitos) -->
+  <div id="soundboard" class="soundboard-panel">
+    <div class="soundboard-toggle">🎛️ Efeitos</div>
+    <div class="soundboard-content">
+      <button class="btn-som" onclick="tocarEfeito('gongo')">🥊 Gongo</button>
+      <button class="btn-som" onclick="tocarEfeito('cash')">💰 Dinheiro</button>
+      <button class="btn-som" onclick="tocarEfeito('airhorn')">📯 Airhorn</button>
+      <button class="btn-som" onclick="tocarEfeito('cheer')">👏 Torcida</button>
+    </div>
+  </div>
+
+  <!-- Alerta de Mega Forrada (Oculto) -->
+  <div id="alertaMegaForrada" class="alerta-mega" style="display: none;">
+    <div class="mega-texto">🔥 MEGA FORRADA! 🔥</div>
+  </div>
+
   <div class="container">
 
     <!-- Botões principais -->
@@ -169,6 +186,13 @@
           <input type="number" id="inputOrganizador" step="1" min="0" max="100">
         </div>
       </div>
+
+      <hr style="border-color:#555; margin: 20px 0;">
+      
+      <!-- Limiar Mega Forrada -->
+      <h3 style="color:var(--cor-secundaria); margin-bottom: 10px;">🚨 Alerta Live Stream</h3>
+      <label for="inputLimiarMega">Disparar "Mega Forrada" a partir de Lucro (R$):</label>
+      <input type="number" id="inputLimiarMega" step="10" min="0" value="500">
 
       <hr style="border-color:#555; margin: 20px 0;">
       <h3 style="color:var(--cor-primaria); margin-bottom: 10px;">🎰 Jogos das Roletas</h3>
