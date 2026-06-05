@@ -61,8 +61,85 @@ button:hover {
   box-shadow: 0 0 12px rgba(212,175,55,0.6);
 }
 
+/* Botões dos Jogadores nos Confrontos */
+.btn-jogador {
+  background: rgba(40, 40, 40, 0.5);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 16px;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+
+.btn-jogador.vencedor-ativo {
+  background: #00ff88;
+  color: #000;
+  border-color: #00ffcc;
+  box-shadow: 0 0 15px #00ff88;
+  font-weight: bold;
+}
+
+/* Botão de Confirmação e Edição */
+.btn-confirmar-confronto {
+  background: #d4af37;
+  color: #111;
+  border: none;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  margin-top: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-confirmar-confronto:hover {
+  background: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.btn-editar-confronto {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  margin-top: 5px;
+  cursor: pointer;
+}
+
+.btn-editar-confronto:hover {
+  background: #444;
+  border-color: #ffd700;
+}
+
+/* Balanço Financeiro Individual (Líquido) */
+.balanco-financeiro {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 5px;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.balanco-financeiro.lucro {
+  background: rgba(0, 255, 136, 0.15);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.balanco-financeiro.prejuizo {
+  background: rgba(255, 70, 70, 0.15);
+  color: #ff4646;
+  border: 1px solid rgba(255, 70, 70, 0.3);
+}
+
 /* ============================
-   Cards
+   Cards de Informações do Topo
 ============================ */
 .cards {
   display: grid;
@@ -98,6 +175,13 @@ button:hover {
   border-left: 6px solid #ffd700;
   border-radius: 10px;
   box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.confronto-confirmado {
+  border-left-color: #00ff88;
+  background: rgba(20, 30, 25, 0.8);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
 }
 
 .confronto h3 {
@@ -106,19 +190,9 @@ button:hover {
   text-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
 }
 
-.vencedor {
-  display: block;
-  font-weight: bold;
-  color: #00ff88;
-  font-size: 22px;
-  margin-top: 10px;
-  text-shadow: 0 0 12px #00ff88, 0 0 24px #00ffcc;
-  animation: brilhar 1.5s infinite alternate;
-}
-
-@keyframes brilhar {
-  from { text-shadow: 0 0 6px #00ff88; }
-  to { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ffcc; }
+.botoes-fase {
+  text-align: center;
+  margin-top: 30px;
 }
 
 /* ============================
@@ -126,7 +200,7 @@ button:hover {
 ============================ */
 .card-final {
   position: fixed;
-  top: 0; left: 0; right:0; bottom:0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.9);
   display: none;
   justify-content: center;
@@ -152,6 +226,11 @@ button:hover {
   margin: 25px 0;
   text-shadow: 0 0 15px #00ff88, 0 0 40px #00ffcc;
   animation: brilhar 2s infinite alternate;
+}
+
+@keyframes brilhar {
+  from { text-shadow: 0 0 6px #00ff88; }
+  to { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ffcc; }
 }
 
 /* ============================
@@ -181,14 +260,6 @@ button:hover {
   margin: auto;
 }
 
-.modal-content h2 {
-  color: #ffd700;
-  margin-bottom: 20px;
-  text-shadow: 0 0 10px rgba(255,215,0,0.8);
-}
-
-.modal-content input { margin-bottom: 15px; }
-
 /* ============================
    Bloco Sorteio (bolinhas)
 ============================ */
@@ -203,17 +274,13 @@ button:hover {
   text-align: center;
   margin: 5px;
   position: relative;
-  top: 0;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: bold;
 }
-
-@keyframes cair {
-  0% { top: 0; }
-  100% { top: 200px; transform: translateX(var(--desloc)); }
-}
-
 
 @keyframes cair {
   0% { top: -60px; opacity: 1; }
-  80% { top: calc(100% - 60px); transform: translateX(var(--desloc)); }
-  100% { top: calc(100% - 60px); opacity: 1; }
+  80% { top: 30px; transform: translateX(var(--desloc)); }
+  100% { top: 30px; opacity: 1; transform: translateX(var(--desloc)); }
 }
