@@ -241,6 +241,21 @@ button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #555; }
 @keyframes popInStats { from { opacity: 0; transform: scale(0.8) translateY(50px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
 /* ============================
+   CRONÔMETRO
+============================ */
+.timer-alert {
+  animation: piscarVermelho 1s infinite;
+  color: #ff4d4d !important;
+  text-shadow: 0 0 20px #ff4d4d !important;
+}
+
+@keyframes piscarVermelho {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ============================
    Restante das Telas (Modais/PDF/Cartas)
 ============================ */
 .card-final { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 9999; }

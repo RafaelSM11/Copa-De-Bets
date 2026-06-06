@@ -32,7 +32,28 @@
         <button onclick="abrirConfig()">⚙️ Configurações e Backups</button>
         <button onclick="abrirHallDaFama()" style="background: #2a2a2a; border-color: var(--cor-primaria);">🏆 Hall da Fama</button>
       </div>
-      <button onclick="toggleBlocoSorteio()">🎲 Sortear Participantes</button>
+      <div style="display: flex; gap: 10px;">
+        <button onclick="toggleCronometro()" style="background: #2a2a2a; border-color: #ffaa00; color: #ffaa00;">⏱️ Cronômetro</button>
+        <button onclick="toggleBlocoSorteio()">🎲 Sortear Participantes</button>
+      </div>
+    </div>
+
+    <!-- Bloco Cronômetro de Pagamento -->
+    <div id="blocoCronometro" style="display: none; background: rgba(20,20,20,0.8); padding: 20px; border-radius: 15px; border: 1px solid #ffaa00; margin-bottom: 30px; text-align: center; box-shadow: 0 0 15px rgba(255, 170, 0, 0.2);">
+      <h3 style="color: #ffaa00; margin-top: 0; margin-bottom: 10px;">⏱️ Tempo para Pagamento (Pix)</h3>
+      
+      <div id="displayCronometro" style="font-size: 60px; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(255, 170, 0, 0.5); font-variant-numeric: tabular-nums; margin-bottom: 15px; letter-spacing: 5px;">05:00</div>
+      
+      <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;">
+        <button onclick="ajustarTempo(-60)" style="padding: 6px 12px; font-size: 14px; background: #333; margin-top:0;">-1 Min</button>
+        <button onclick="ajustarTempo(60)" style="padding: 6px 12px; font-size: 14px; background: #333; margin-top:0;">+1 Min</button>
+      </div>
+      
+      <div style="display: flex; justify-content: center; gap: 10px;">
+        <button id="btnStartCronometro" onclick="iniciarCronometro()" style="background: var(--cor-secundaria); color: #000; border-color: var(--cor-secundaria); margin-top:0;">▶ Iniciar</button>
+        <button onclick="pausarCronometro()" style="background: #333; margin-top:0;">⏸ Pausar</button>
+        <button onclick="zerarCronometro()" style="background: #8b0000; border-color: #ff4d4d; color: #fff; margin-top:0;">⏹ Zerar</button>
+      </div>
     </div>
 
     <!-- Bloco Sorteio Participantes -->
@@ -255,6 +276,7 @@
       
       <div style="position: relative; margin: 30px auto; width: 300px; height: 300px;">
         <canvas id="canvasRoleta" width="300" height="300"></canvas>
+        <!-- Ponteiro da Roleta -->
         <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 40px solid var(--cor-secundaria); z-index: 10; filter: drop-shadow(0px 4px 2px rgba(0,0,0,0.5));"></div>
       </div>
 

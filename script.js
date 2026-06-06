@@ -1079,7 +1079,6 @@ function mostrarCaraACara(fase, matchIndex) {
   document.getElementById('vsP1').innerHTML = p1;
   document.getElementById('vsP2').innerHTML = p2;
 
-  // Busca dados globais (ou zera se for novato)
   const statsP1 = estatisticasGlobais[p1] || {campeao: 0, vice: 0, forrada: 0};
   const statsP2 = estatisticasGlobais[p2] || {campeao: 0, vice: 0, forrada: 0};
 
@@ -1236,9 +1235,75 @@ function girarRoleta() {
 
 function fecharCardFinal() { document.getElementById('cardFinal').style.display = 'none'; }
 
+// ============================
+// Cronômetro de Pagamento
+// ============================
+let tempoCronometro = 300; 
+let intervaloCronometro = null;
+
+function toggleCronometro() {
+  const bloco = document.getElementById('blocoCronometro');
+  bloco.style.display = bloco.style.display === 'none' || bloco.style.display === '' ? 'block' : 'none';
+  atualizarDisplayCronometro();
+}
+
+function atualizarDisplayCronometro() {
+  const display = document.getElementById('displayCronometro');
+  const minutos = Math.floor(tempoCronometro / 60);
+  const segundos = tempoCronometro % 60;
+  display.textContent = `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+  
+  if (tempoCronometro <= 10 && tempoCronometro > 0) {
+    display.classList.add('timer-alert');
+    window.tocarSom('flip'); 
+  } else {
+    display.classList.remove('timer-alert');
+  }
+}
+
+function ajustarTempo(segundos) {
+  tempoCronometro += segundos;
+  if (tempoCronometro < 0) tempoCronometro = 0;
+  atualizarDisplayCronometro();
+}
+
+function iniciarCronometro() {
+  if (intervaloCronometro) clearInterval(intervaloCronometro);
+  if (tempoCronometro <= 0) return;
+  
+  document.getElementById('btnStartCronometro').disabled = true;
+  
+  intervaloCronometro = setInterval(() => {
+    tempoCronometro--;
+    atualizarDisplayCronometro();
+    
+    if (tempoCronometro <= 0) {
+      clearInterval(intervaloCronometro);
+      document.getElementById('btnStartCronometro').disabled = false;
+      window.tocarEfeito('airhorn'); 
+    }
+  }, 1000);
+}
+
+function pausarCronometro() {
+  clearInterval(intervaloCronometro);
+  document.getElementById('btnStartCronometro').disabled = false;
+}
+
+function zerarCronometro() {
+  pausarCronometro();
+  tempoCronometro = 300; 
+  atualizarDisplayCronometro();
+}
+
 // Expõe funções pro HTML
 window.mostrarCaraACara = mostrarCaraACara;
 window.fecharVs = fecharVs;
+window.toggleCronometro = toggleCronometro;
+window.ajustarTempo = ajustarTempo;
+window.iniciarCronometro = iniciarCronometro;
+window.pausarCronometro = pausarCronometro;
+window.zerarCronometro = zerarCronometro;
 
 // Inicia chamando o Load
 window.onload = () => {
